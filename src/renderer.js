@@ -252,15 +252,9 @@ export class TerrariumRenderer {
     }
 
     // 5. Render Settled & Falling Pastries in Box
-    ctx.save();
-    // Clip strictly to inside the aquarium box so creatures never poke outside
-    ctx.beginPath();
-    ctx.rect(bounds.left - 1, bounds.top - 25, (bounds.right - bounds.left) + 2, (bounds.bottom - bounds.top) + 2);
-    ctx.clip();
     for (const m of world.mushrooms) {
       this.renderMushroom(ctx, m, dangerLineY, isDangerActive);
     }
-    ctx.restore();
 
     // 6. Render Transparent 3D Acrylic Box Frame & Highlights
     this.renderGlassJar(ctx, bounds);
