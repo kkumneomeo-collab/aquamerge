@@ -247,7 +247,7 @@ export class TerrariumRenderer {
 
     // 4. Render Aiming Raycast Guide (if holding a pastry)
     if (heldMushroom && aimAssisted) {
-      const landingY = world.getLandingPreviewY(dropX, heldMushroom.radius);
+      const landingY = world.getLandingPreviewY(dropX, heldMushroom.radius, heldMushroom);
       this.renderAimingGuide(ctx, dropX, heldMushroom, landingY, bounds, dangerLineY);
     }
 
@@ -431,11 +431,14 @@ export class TerrariumRenderer {
       ctx.fill();
     }
 
-    // 2. Ghost preview circle at landing position
+    // 2. Ghost preview ellipse at landing position matching creature dimensions
     ctx.save();
     ctx.translate(dropX, landingY);
+    const feat = heldMushroom.features || {};
+    const rx = heldMushroom.radius * (feat.aspectX || 1.0);
+    const ry = heldMushroom.radius * (feat.aspectY || 1.0);
     ctx.beginPath();
-    ctx.arc(0, 0, heldMushroom.radius, 0, Math.PI * 2);
+    ctx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
     ctx.fillStyle = heldMushroom.color;
     ctx.globalAlpha = 0.22;
     ctx.fill();

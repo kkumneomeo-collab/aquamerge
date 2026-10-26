@@ -128,11 +128,30 @@ export class PhysicsWorld {
           let dx = b.x - a.x;
           let dy = b.y - a.y;
           let distSq = dx * dx + dy * dy;
-          const minDist = a.radius + b.radius;
+          if (distSq < 0.00001) {
+            dx = 0.001;
+            dy = 0.001;
+            distSq = dx * dx + dy * dy;
+          }
+          let dist = Math.sqrt(distSq);
 
-          if (distSq < minDist * minDist && distSq > 0.00001) {
-            let dist = Math.sqrt(distSq);
+          const featA = (a.tierData && a.tierData.features) || {};
+          const featB = (b.tierData && b.tierData.features) || {};
+          const axA = featA.aspectX || 1.0;
+          const ayA = featA.aspectY || 1.0;
+          const axB = featB.aspectX || 1.0;
+          const ayB = featB.aspectY || 1.0;
 
+          let nx = dx / dist;
+          let ny = dy / dist;
+
+          // Directional collision radius based on contact angle:
+          // Perfectly eliminates vertical empty gaps while preventing horizontal wall/body clipping
+          const ra = a.radius * Math.hypot(nx * axA, ny * ayA);
+          const rb = b.radius * Math.hypot(nx * axB, ny * ayB);
+          const minDist = ra + rb;
+
+          if (dist < minDist) {
             // Calculate relative speed
             const relSpeed = Math.hypot(a.vx - b.vx, a.vy - b.vy);
 
@@ -143,10 +162,12 @@ export class PhysicsWorld {
             if (Math.abs(dx) < 2.0 && Math.abs(dy) > 0.3 * minDist && relSpeed > 0.12) {
               const { left, right } = this.bounds;
               let nudgeDir = 0;
+              const rxA = a.radius * axA;
+              const rxB = b.radius * axB;
               // If near the left wall, always nudge right (away from wall)
-              if (a.x - a.radius < left + 15 || b.x - b.radius < left + 15) {
+              if (a.x - rxA < left + 15 || b.x - rxB < left + 15) {
                 nudgeDir = 1.2;
-              } else if (a.x + a.radius > right - 15 || b.x + b.radius > right - 15) {
+              } else if (a.x + rxA > right - 15 || b.x + rxB > right - 15) {
                 // If near the right wall, always nudge left (away from wall)
                 nudgeDir = -1.2;
               } else {
@@ -156,10 +177,9 @@ export class PhysicsWorld {
               dx += nudgeDir;
               distSq = dx * dx + dy * dy;
               dist = Math.sqrt(distSq);
+              nx = dx / dist;
+              ny = dy / dist;
             }
-
-            const nx = dx / dist;
-            const ny = dy / dist;
 
             // Matching tier merge condition
             if (a.tier === b.tier && a.tier < 11 && !a.isMerging && !b.isMerging) {
@@ -201,16 +221,18 @@ export class PhysicsWorld {
 
             // Gravitational slope rolling off rounded caps:
             // Only smaller or similar-sized creatures roll off (never a giant otter off a tiny nudibranch!)
+            const rxA = a.radius * axA;
+            const rxB = b.radius * axB;
             if (!b.isSleeping && dy < -0.2 * minDist && b.radius <= a.radius * 1.25) {
               const slopeRoll = (dx / dist) * subGravity * 0.35;
-              if (!(slopeRoll < 0 && b.x - b.radius <= this.bounds.left + 2) &&
-                  !(slopeRoll > 0 && b.x + b.radius >= this.bounds.right - 2)) {
+              if (!(slopeRoll < 0 && b.x - rxB <= this.bounds.left + 2) &&
+                  !(slopeRoll > 0 && b.x + rxB >= this.bounds.right - 2)) {
                 b.vx += slopeRoll;
               }
             } else if (!a.isSleeping && dy > 0.2 * minDist && a.radius <= b.radius * 1.25) {
               const slopeRoll = (-dx / dist) * subGravity * 0.35;
-              if (!(slopeRoll < 0 && a.x - a.radius <= this.bounds.left + 2) &&
-                  !(slopeRoll > 0 && a.x + a.radius >= this.bounds.right - 2)) {
+              if (!(slopeRoll < 0 && a.x - rxA <= this.bounds.left + 2) &&
+                  !(slopeRoll > 0 && a.x + rxA >= this.bounds.right - 2)) {
                 a.vx += slopeRoll;
               }
             }
@@ -286,8 +308,12 @@ export class PhysicsWorld {
       m.squishX += (1.0 - m.squishX) * 0.35;
       m.squishY += (1.0 - m.squishY) * 0.35;
 
+      const feat = (m.tierData && m.tierData.features) || {};
+      const rx = m.radius * (feat.aspectX || 1.0);
+      const ry = m.radius * (feat.aspectY || 1.0);
+
       const speed = Math.hypot(m.vx, m.vy);
-      const isOnFloor = (m.y + m.radius) >= (this.bounds.bottom - 2.0);
+      const isOnFloor = (m.y + ry) >= (this.bounds.bottom - 2.0);
 
       // Resting / Sleep detection:
       // Floor items sleep in 0.10s. Stacked/crowded items require 0.25s of stable settling.
@@ -301,10 +327,10 @@ export class PhysicsWorld {
           m.vy = 0;
           m.angularVelocity = 0;
           m.angle = 0; // Lock perfectly upright!
-          // Clamp solidly to container bounds
-          if (m.x - m.radius < this.bounds.left) m.x = this.bounds.left + m.radius;
-          if (m.x + m.radius > this.bounds.right) m.x = this.bounds.right - m.radius;
-          if (m.y + m.radius > this.bounds.bottom) m.y = this.bounds.bottom - m.radius;
+          // Clamp solidly to container bounds using exact aspect radii
+          if (m.x - rx < this.bounds.left) m.x = this.bounds.left + rx;
+          if (m.x + rx > this.bounds.right) m.x = this.bounds.right - rx;
+          if (m.y + ry > this.bounds.bottom) m.y = this.bounds.bottom - ry;
         }
       } else {
         m.sleepTimer = 0;
@@ -337,10 +363,13 @@ export class PhysicsWorld {
    */
   resolveWallCollision(m, onBounce, isFirstSubstep) {
     const { left, right, bottom } = this.bounds;
+    const feat = (m.tierData && m.tierData.features) || {};
+    const rx = m.radius * (feat.aspectX || 1.0);
+    const ry = m.radius * (feat.aspectY || 1.0);
 
-    // Flat bottom floor - no corner arcs to deflect edge drops!
-    if (m.y + m.radius > bottom) {
-      m.y = bottom - m.radius;
+    // Flat bottom floor - no floating gaps, sits directly on coral sand!
+    if (m.y + ry > bottom) {
+      m.y = bottom - ry;
       if (m.vy > 0) {
         if (isFirstSubstep && m.vy > 2.2 && onBounce) {
           onBounce(m.radius, m.vy);
@@ -352,18 +381,18 @@ export class PhysicsWorld {
       }
     }
 
-    // Straight left vertical wall
-    if (m.x - m.radius < left) {
-      m.x = left + m.radius;
+    // Straight left vertical wall - stops creature precisely at outer edge with zero poking
+    if (m.x - rx < left) {
+      m.x = left + rx;
       if (m.vx < 0) {
         m.vx = 0; // stop horizontal motion instantly against wall
       }
       m.angularVelocity *= 0.8;
     }
 
-    // Straight right vertical wall
-    if (m.x + m.radius > right) {
-      m.x = right - m.radius;
+    // Straight right vertical wall - stops creature precisely at outer edge with zero poking
+    if (m.x + rx > right) {
+      m.x = right - rx;
       if (m.vx > 0) {
         m.vx = 0; // stop horizontal motion instantly against wall
       }
@@ -374,18 +403,27 @@ export class PhysicsWorld {
   /**
    * Raycast downwards from dropX to find the first landing contact
    */
-  getLandingPreviewY(dropX, radius) {
-    let landingY = this.bounds.bottom - radius;
+  getLandingPreviewY(dropX, radius, tierData = null) {
+    const feat = (tierData && tierData.features) || {};
+    const heldAx = feat.aspectX || 1.0;
+    const heldAy = feat.aspectY || 1.0;
+    let landingY = this.bounds.bottom - radius * heldAy;
 
     for (let i = 0; i < this.mushrooms.length; i++) {
       const m = this.mushrooms[i];
       if (m.isMerging) continue;
 
-      const dx = Math.abs(dropX - m.x);
-      const combinedR = radius + m.radius;
+      const mFeat = (m.tierData && m.tierData.features) || {};
+      const mAx = mFeat.aspectX || 1.0;
+      const mAy = mFeat.aspectY || 1.0;
 
-      if (dx < combinedR) {
-        const dy = Math.sqrt(combinedR * combinedR - dx * dx);
+      const dx = Math.abs(dropX - m.x);
+      const combX = radius * heldAx + m.radius * mAx;
+
+      if (dx < combX) {
+        const combY = radius * heldAy + m.radius * mAy;
+        const normX = dx / combX;
+        const dy = combY * Math.sqrt(Math.max(0, 1.0 - normX * normX));
         const contactY = m.y - dy;
         if (contactY < landingY) {
           landingY = contactY;

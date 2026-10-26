@@ -164,8 +164,10 @@ export class GameManager {
   clampDropX() {
     if (!this.currentTierData) return;
     const r = this.currentTierData.radius;
-    const minX = this.bounds.left + r + 4;
-    const maxX = this.bounds.right - r - 4;
+    const feat = this.currentTierData.features || {};
+    const rx = r * (feat.aspectX || 1.0);
+    const minX = this.bounds.left + rx + 2;
+    const maxX = this.bounds.right - rx - 2;
     this.dropX = Math.max(minX, Math.min(maxX, this.dropX));
   }
 
@@ -183,7 +185,10 @@ export class GameManager {
     this.world.wakeNearby(this.dropX, 150, 100);
 
     // Spawn pastry into the physics world
-    this.world.addMushroom(this.dropX, 90 + this.currentTierData.radius, this.currentTierData, true);
+    const feat = this.currentTierData.features || {};
+    const ry = this.currentTierData.radius * (feat.aspectY || 1.0);
+    this.clampDropX();
+    this.world.addMushroom(this.dropX, 90 + ry, this.currentTierData, true);
 
     this.canDrop = false;
     this.dropCooldownTimer = this.dropCooldownDuration;
@@ -1105,7 +1110,9 @@ export class GameManager {
         // 3. Its downward velocity has settled (vy < 1.0 after 0.35s)
         const isLanded = age > 0.75 || m.isSleeping || (age > 0.35 && m.vy < 1.0);
 
-        if (isLanded && (m.y - m.radius) < this.dangerLineY) {
+        const feat = (m.tierData && m.tierData.features) || {};
+        const ry = m.radius * (feat.aspectY || 1.0);
+        if (isLanded && (m.y - ry) < this.dangerLineY) {
           isAnyAboveDanger = true;
           break;
         }
