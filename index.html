@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>AquaMerge: Cozy Ocean Aquarium</title>
+  <meta name="description" content="A cozy ocean merge puzzle game. Drop adorable living sea creatures into a clear aquarium, combine matching marine friends, and chase high scores in a light blue ocean paradise!">
+  
+  <!-- Mobile & PWA App Setup -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="AquaMerge">
+  <meta name="theme-color" content="#E0F2FE">
+  <link rel="manifest" href="manifest.json">
+
+  <!-- Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐬</text></svg>">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐬</text></svg>">
+
+  <link rel="stylesheet" href="style.css?v=20261026_ocean">
+</head>
+<body>
+  <!-- Ambient Ocean Aquarium Backdrop with Floating Bubbles -->
+  <div class="forest-backdrop">
+    <div class="light-ray ray-1"></div>
+    <div class="light-ray ray-2"></div>
+    <div class="floating-firefly firefly-1"></div>
+    <div class="floating-firefly firefly-2"></div>
+    <div class="floating-firefly firefly-3"></div>
+  </div>
+
+  <main class="app-container">
+    <div class="game-dashboard">
+      
+      <!-- Left Sidebar: Previews & Controls (Desktop & Wide Screen) -->
+      <aside class="dashboard-side side-left" id="dashboard-left">
+        <div class="preview-card glass-panel">
+          <span class="preview-label">NEXT CREATURE</span>
+          <div class="preview-canvas-box">
+            <canvas id="hud-next-canvas-desktop" width="76" height="76"></canvas>
+          </div>
+          <span class="preview-name" id="hud-next-name-desktop">Sea Bunny</span>
+          <span class="preview-sub">Next drop in queue</span>
+        </div>
+
+        <div class="preview-card glass-panel">
+          <span class="preview-label">TARGET GOAL</span>
+          <div class="preview-canvas-box">
+            <canvas id="hud-target-canvas-desktop" width="76" height="76"></canvas>
+          </div>
+          <span class="preview-name" id="hud-target-name-desktop">???</span>
+          <span class="preview-sub">Next friend to discover</span>
+        </div>
+
+        <div class="controls-cheatsheet glass-panel">
+          <span class="cheat-title">Aquarium Guide</span>
+          <div class="cheat-item"><span class="key-badge">Mouse</span> Aim & Drop</div>
+          <div class="cheat-item"><span class="key-badge">A / D / ← →</span> Aim dropper</div>
+          <div class="cheat-item"><span class="key-badge">Space / ↓</span> Release drop</div>
+          <div class="cheat-item"><span class="key-badge">P / Esc</span> Pause game</div>
+          <div class="cheat-item"><span class="key-badge">Gamepad</span> Stick + A</div>
+        </div>
+      </aside>
+
+      <!-- Center: Mobile Screen Layout Matching User Reference -->
+      <div class="mobile-game-column">
+        
+        <!-- Top Navigation & Score Header (Matching Reference Image) -->
+        <header class="mobile-header-bar" id="game-mobile-header">
+          <button class="header-btn" id="btn-header-back" title="Pause / Menu" aria-label="Menu">‹</button>
+          
+          <div class="header-score-pill">
+            <div class="score-subpill">
+              <span class="score-lbl">SCORE</span>
+              <span class="score-num" id="hud-score">0</span>
+            </div>
+            <div class="score-div"></div>
+            <div class="score-subpill alltime-subpill">
+              <span class="score-lbl alltime-lbl">ALL-TIME</span>
+              <span class="score-num alltime-num" id="hud-alltime">0</span>
+            </div>
+          </div>
+
+          <button class="header-btn" id="btn-header-restart" title="Restart Aquarium" aria-label="Restart">↻</button>
+        </header>
+
+        <!-- Action / Sub Bar: Powerups (Shake, Bomb) & Next Queue -->
+        <div class="mobile-sub-bar" id="game-mobile-subbar">
+          <div class="powerup-group">
+            <button class="powerup-btn" id="btn-powerup-shake" title="Shake Tank" aria-label="Shake Tank">
+              <span class="pw-icon">📳</span>
+              <span class="pw-badge">▶</span>
+            </button>
+            <button class="powerup-btn" id="btn-powerup-bomb" title="Pop Smallest" aria-label="Pop Smallest">
+              <span class="pw-icon">💣</span>
+              <span class="pw-badge">▶</span>
+            </button>
+          </div>
+
+          <div class="next-queue-group">
+            <span class="next-title">Next</span>
+            <div class="next-queue-pill" id="next-queue-pill">
+              <canvas id="next-queue-canvas" width="130" height="34"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Center Showcase Container with Canvas Viewport -->
+        <div class="terrarium-wrapper" id="terrarium-container">
+          <canvas id="game-canvas" width="460" height="720"></canvas>
+
+          <!-- Hidden legacy HUD overlay elements to preserve ID bindings -->
+          <header class="hud-overlay hidden" id="game-hud">
+            <div class="hud-bar top-bar">
+              <button class="hud-icon-btn hidden" id="btn-hud-pause">⏸</button>
+              <div class="hud-stat-pill next-pill-compact hidden" id="hud-mobile-next-pill">
+                <canvas id="hud-next-canvas" width="34" height="34"></canvas>
+              </div>
+              <span class="hidden" id="hud-best-score">0</span>
+              <button class="hud-icon-btn hidden" id="btn-hud-mute">🔊</button>
+              <button class="hud-icon-btn hidden" id="btn-hud-fungidex">📖</button>
+            </div>
+          </header>
+
+          <!-- Discovery Announcement Banner -->
+          <div class="discovery-banner hidden" id="discovery-banner">
+            <div class="banner-sparkle">🫧</div>
+            <div class="banner-text">
+              <span class="banner-sub">NEW SEA FRIEND DISCOVERED!</span>
+              <h2 class="discovery-name">Sea Bunny</h2>
+              <span class="discovery-species">Jorunna parva</span>
+            </div>
+          </div>
+
+          <!-- Title Screen Overlay -->
+          <section class="title-overlay" id="title-screen">
+            <div class="title-content">
+              <div class="title-badge">COZY OCEAN AQUARIUM MERGE</div>
+              <h1 class="game-logo">
+                <span class="logo-text">AquaMerge</span>
+                <span class="logo-sub">Cozy Ocean Aquarium</span>
+              </h1>
+
+              <div class="title-hero-preview">
+                <img src="assets/seacreatures/tier1_nudibranch.png" alt="Sea Bunny" class="title-pastry-img pastry-left">
+                <img src="assets/seacreatures/tier7_axolotl.png" alt="Axolotl" class="title-pastry-img pastry-center">
+                <img src="assets/seacreatures/tier10_orca.png" alt="Orca" class="title-pastry-img pastry-right">
+              </div>
+
+              <div class="title-best-card">
+                <span class="title-best-label">Aquarium High Score</span>
+                <span class="title-best-val" id="title-best-score">0</span>
+              </div>
+
+              <div class="title-menu-actions">
+                <button class="btn btn-primary btn-large pulse-glow" id="btn-play-game">
+                  <span class="btn-icon">🐬</span>
+                  <span>Drop & Splash</span>
+                </button>
+                <button class="btn btn-secondary" id="btn-title-fungidex">
+                  <span class="btn-icon">📖</span>
+                  <span>The Aquadex (10 Sea Friends)</span>
+                </button>
+                <div class="button-row">
+                  <button class="btn btn-tertiary" id="btn-title-tutorial">
+                    <span class="btn-icon">❓</span>
+                    <span>How to Play</span>
+                  </button>
+                  <button class="btn btn-tertiary" id="btn-title-settings">
+                    <span class="btn-icon">⚙️</span>
+                    <span>Settings</span>
+                  </button>
+                </div>
+              </div>
+
+              <footer class="title-credits">
+                <span>Touch, Drag, Keyboard (A/D/Space) & Gamepad Supported</span>
+              </footer>
+            </div>
+          </section>
+        </div>
+
+        <!-- Bottom Evolution Bar (Matching Reference Image) -->
+        <div class="evolution-track-pill" id="evolution-track-pill">
+          <!-- 10 circular miniature tier icons rendered dynamically -->
+        </div>
+
+      </div>
+
+      <!-- Right Sidebar: Stats & Progression Ladder (Desktop & Landscape) -->
+      <aside class="dashboard-side side-right" id="dashboard-right">
+        <div class="stats-panel glass-panel">
+          <div class="panel-stat">
+            <span class="stat-label">CURRENT SCORE</span>
+            <span class="stat-number score-gold" id="hud-score-desktop">0</span>
+          </div>
+          <div class="panel-stat">
+            <span class="stat-label">ALL-TIME BEST</span>
+            <span class="stat-number best-amber" id="hud-best-score-desktop">0</span>
+          </div>
+          <div class="panel-stat">
+            <span class="stat-label">TOTAL MERGES</span>
+            <span class="stat-number" id="hud-merges-desktop">0</span>
+          </div>
+        </div>
+
+        <div class="sidebar-actions">
+          <button class="btn btn-secondary side-btn" id="btn-side-fungidex">
+            <span class="btn-icon">📖</span>
+            <span>The Aquadex</span>
+          </button>
+          <button class="btn btn-secondary side-btn" id="btn-side-tutorial">
+            <span class="btn-icon">❓</span>
+            <span>How to Play</span>
+          </button>
+          <button class="btn btn-secondary side-btn" id="btn-side-settings">
+            <span class="btn-icon">⚙️</span>
+            <span>Settings</span>
+          </button>
+          <button class="btn btn-secondary side-btn" id="btn-side-mute">
+            <span class="btn-icon" id="side-mute-icon">🔊</span>
+            <span id="side-mute-text">Sound: ON</span>
+          </button>
+        </div>
+
+        <div class="mini-ladder glass-panel">
+          <span class="ladder-title">Sea Evolution Chain</span>
+          <div class="ladder-list" id="ladder-list">
+            <!-- Populated dynamically with 10 sea creature dots -->
+          </div>
+        </div>
+      </aside>
+
+    </div>
+  </main>
+
+  <!-- Modal Dialog: Pause Overlay -->
+  <dialog id="pause-dialog" class="glass-dialog">
+    <div class="dialog-content">
+      <div class="dialog-header">
+        <h2>Aquarium Paused</h2>
+        <button class="btn-dialog-close" aria-label="Close dialog">✕</button>
+      </div>
+      <p class="dialog-sub">Take a calm breath and watch gentle bubbles float.</p>
+      <div class="dialog-menu">
+        <button class="btn btn-primary" id="btn-pause-resume">
+          <span class="btn-icon">▶</span>
+          <span>Resume Aquarium</span>
+        </button>
+        <button class="btn btn-pause-restart" id="btn-pause-restart">
+          <span class="btn-icon">🔄</span>
+          <span>Restart Dive</span>
+        </button>
+        <button class="btn btn-secondary" id="btn-pause-settings">
+          <span class="btn-icon">⚙️</span>
+          <span>Audio & Controls</span>
+        </button>
+        <button class="btn btn-tertiary" id="btn-pause-title">
+          <span class="btn-icon">🏡</span>
+          <span>Quit to Menu</span>
+        </button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Modal Dialog: Settings -->
+  <dialog id="settings-dialog" class="glass-dialog">
+    <div class="dialog-content">
+      <div class="dialog-header">
+        <h2>Aquarium Settings</h2>
+        <button class="btn-dialog-close" aria-label="Close dialog">✕</button>
+      </div>
+      <div class="settings-list">
+        <div class="setting-item">
+          <label for="slider-sfx-vol">Sound Effects (SFX)</label>
+          <input type="range" id="slider-sfx-vol" min="0" max="100" value="80">
+        </div>
+        <div class="setting-item">
+          <label for="slider-music-vol">Calm Ocean Kalimba (BGM)</label>
+          <input type="range" id="slider-music-vol" min="0" max="100" value="50">
+        </div>
+        <div class="setting-item toggle-row">
+          <span>Aiming Dotted Beam</span>
+          <label class="switch">
+            <input type="checkbox" id="toggle-aim-guide" checked>
+            <span class="slider-toggle"></span>
+          </label>
+        </div>
+        <div class="setting-item toggle-row">
+          <span>Screen Shake Feedback</span>
+          <label class="switch">
+            <input type="checkbox" id="toggle-screen-shake" checked>
+            <span class="slider-toggle"></span>
+          </label>
+        </div>
+        <div class="setting-divider"></div>
+        <div class="setting-danger-zone">
+          <button class="btn btn-danger" id="btn-clear-data">Reset Saved Progress</button>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Modal Dialog: The Aquadex (Compendium) -->
+  <dialog id="fungidex-dialog" class="glass-dialog large-dialog">
+    <div class="dialog-content">
+      <div class="dialog-header">
+        <div>
+          <h2>The Aquadex</h2>
+          <span class="dialog-sub" id="fungidex-progress">0 / 10 Discovered</span>
+        </div>
+        <button class="btn-dialog-close" aria-label="Close dialog">✕</button>
+      </div>
+      <div class="fungidex-scroll-container">
+        <div class="fungidex-grid" id="fungidex-grid">
+          <!-- Dynamically populated cards -->
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Modal Dialog: How to Play / Controls Tutorial -->
+  <dialog id="tutorial-dialog" class="glass-dialog">
+    <div class="dialog-content">
+      <div class="dialog-header">
+        <h2>How to Splash & Merge</h2>
+        <button class="btn-dialog-close" aria-label="Close dialog">✕</button>
+      </div>
+      <div class="tutorial-steps">
+        <div class="tutorial-card">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <h3>Aim & Position</h3>
+            <p>Slide your mouse, drag on touchscreen, or use <strong>A / D / Arrow Keys</strong> to position the sea friend.</p>
+          </div>
+        </div>
+        <div class="tutorial-card">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <h3>Drop into the Tank</h3>
+            <p>Click, tap, or release finger (or press <strong>Space / Down Arrow</strong>) to drop the creature into the water.</p>
+          </div>
+        </div>
+        <div class="tutorial-card">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <h3>Merge Matching Friends</h3>
+            <p>When two matching sea creatures touch, they burst into bubbly pops and merge into a higher tier!</p>
+          </div>
+        </div>
+        <div class="tutorial-card warning-card">
+          <div class="step-num">⚠️</div>
+          <div class="step-body">
+            <h3>Beware the Ocean Surface!</h3>
+            <p>Keep the creatures below the top warning line. If the tank overflows for over 3.5 seconds, the dive ends!</p>
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-large btn-dialog-close">Got it! Let's Dive 🐬</button>
+    </div>
+  </dialog>
+
+  <!-- Modal Dialog: Results / Game Over (Casual 3D Style in Ocean Blue Theme) -->
+  <dialog id="results-dialog" class="glass-dialog casual-theme-dialog">
+    <div class="casual-dialog-card">
+      
+      <!-- Top Golden Arch & Gem Crest -->
+      <div class="casual-arch-header">
+        <div class="arch-gold-gem">
+          <span class="gem-sparkle">✦</span>
+        </div>
+      </div>
+
+      <div class="casual-dialog-body text-center">
+        <!-- Title & Subtitle -->
+        <div class="casual-title-wrap">
+          <h2 class="casual-result-title">
+            <span class="title-star left">✦</span>
+            <span>Aquarium Dive</span>
+            <span class="title-star right">✦</span>
+          </h2>
+          <div class="casual-sub-line">
+            <span class="sub-flourish">──</span>
+            <span class="dialog-sub">Finished</span>
+            <span class="sub-flourish">──</span>
+          </div>
+        </div>
+
+        <!-- Dual 3D Featured Pedestals -->
+        <div class="casual-pedestals-row">
+          <!-- Left Pedestal: Highest Sea Creature -->
+          <div class="casual-pedestal-item">
+            <div class="pedestal-podium purple-podium">
+              <div class="podium-surface">
+                <canvas id="result-highest-canvas" width="80" height="80"></canvas>
+              </div>
+              <div class="podium-badge purple-badge" id="result-highest-tier">Tier 3</div>
+              <div class="podium-ground-glow purple-glow"></div>
+            </div>
+            <div class="pedestal-labels">
+              <span class="pedestal-primary-text" id="result-highest-name">Purple Sea Urchin</span>
+              <span class="pedestal-sub-label">Highest Creature</span>
+            </div>
+          </div>
+
+          <!-- Right Pedestal: All-Time Record -->
+          <div class="casual-pedestal-item">
+            <div class="pedestal-podium gold-podium">
+              <div class="podium-surface">
+                <div class="prize-chest-visual">
+                  <span class="chest-emoji">🎁</span>
+                  <span class="chest-sparkles">✨</span>
+                </div>
+              </div>
+              <div class="podium-badge gold-badge">
+                <span class="star-icon">★</span>
+                <span>RECORD</span>
+              </div>
+              <div class="podium-ground-glow gold-glow"></div>
+            </div>
+            <div class="pedestal-labels">
+              <span class="pedestal-primary-text" id="result-best-score">0</span>
+              <span class="pedestal-sub-label">All-Time Best</span>
+              <span class="new-best-pill hidden" id="result-new-best-badge">NEW RECORD! ⭐</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3D Casual Records List -->
+        <div class="casual-records-list">
+          <!-- Row 1: Dive Score -->
+          <div class="casual-record-card card-harvest">
+            <div class="record-rank-circle rank-gold">
+              <span>1</span>
+            </div>
+            <div class="record-main-label">
+              <span>Dive Score</span>
+            </div>
+            <div class="record-token-pill">
+              <span class="token-symbol">🫧</span>
+              <span class="token-value highlight" id="result-final-score">0</span>
+            </div>
+            <div class="record-badge-icon">🏆</div>
+          </div>
+
+          <!-- Row 2: Creatures Merged -->
+          <div class="casual-record-card card-merges">
+            <div class="record-rank-circle rank-silver">
+              <span>2</span>
+            </div>
+            <div class="record-main-label">
+              <span>Friends Merged</span>
+            </div>
+            <div class="record-token-pill">
+              <span class="token-symbol">✨</span>
+              <span class="token-value" id="result-total-merges">0</span>
+            </div>
+            <div class="record-badge-icon">🐬</div>
+          </div>
+
+          <!-- Row 3: Diver Status -->
+          <div class="casual-record-card card-player">
+            <div class="record-rank-circle rank-player">
+              <span>🤿</span>
+            </div>
+            <div class="record-main-label">
+              <span>Ocean Diver</span>
+            </div>
+            <div class="record-token-pill pill-player">
+              <span class="token-symbol">⭐</span>
+              <span class="token-value">Marine Master</span>
+            </div>
+            <div class="record-badge-icon">🏅</div>
+          </div>
+        </div>
+
+        <!-- Bottom Mega 3D "Claim & Splash" Capsule Button -->
+        <div class="casual-cta-section">
+          <button class="btn-mega-claim pulse-glow" id="btn-result-retry">
+            <span>Claim & Splash</span>
+          </button>
+          
+          <div class="casual-actions-row">
+            <button class="btn-casual-secondary" id="btn-result-fungidex">
+              <span class="btn-icon">📖</span>
+              <span>The Aquadex</span>
+            </button>
+            <button class="btn-casual-secondary" id="btn-result-title">
+              <span class="btn-icon">🏡</span>
+              <span>Home</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </dialog>
+
+  <script type="module" src="src/game.js?v=20261026_ocean"></script>
+</body>
+</html>

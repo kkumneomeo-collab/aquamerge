@@ -1,0 +1,417 @@
+/**
+ * Custom 2D Circle Physics Engine for Mushroom Merge Terrarium
+ * Tuned for solid downward gravity, zero edge sliding, instant settling,
+ * and stable resting state (stays completely still until struck).
+ */
+export class PhysicsWorld {
+  constructor(bounds) {
+    this.bounds = bounds; // { left, right, top, bottom }
+    this.gravity = 0.72; // Solid, crisp downward gravity
+    this.airResistance = 0.995;
+    this.friction = 0.55; // Natural rolling over mushroom caps
+    this.restitution = 0.04; // Very low bounce - no bouncy ball effect
+    this.substeps = 10; // High precision for rock-solid stability
+    this.mushrooms = [];
+    this.nextId = 1;
+  }
+
+  setBounds(bounds) {
+    this.bounds = bounds;
+  }
+
+  addMushroom(x, y, tierData, isDrop = false) {
+    const mushroom = {
+      id: this.nextId++,
+      x,
+      y,
+      vx: 0,
+      vy: isDrop ? 1.2 : 0, // Solid downward start on drop, zero initial velocity on merge
+      radius: tierData.radius,
+      tier: tierData.tier,
+      tierData,
+      mass: Math.PI * tierData.radius * tierData.radius,
+      angle: 0,
+      angularVelocity: 0,
+      scale: isDrop ? 1.0 : 0.3,
+      targetScale: 1.0,
+      squishX: 1.0,
+      squishY: 1.0,
+      isMerging: false,
+      isSleeping: false,
+      sleepTimer: 0,
+      settledTime: 0,
+      createdAt: performance.now(),
+      // Living animation state
+      blinkTimer: Math.random() * 3 + 2,
+      isBlinking: false,
+      lookX: 0,
+      lookY: 0,
+      wobble: 0,
+    };
+
+    this.mushrooms.push(mushroom);
+    return mushroom;
+  }
+
+  removeMushroom(id) {
+    const idx = this.mushrooms.findIndex(m => m.id === id);
+    if (idx !== -1) {
+      this.mushrooms.splice(idx, 1);
+    }
+  }
+
+  clear() {
+    this.mushrooms = [];
+  }
+
+  /**
+   * Wake up all mushrooms in the vicinity of (x, y)
+   */
+  wakeNearby(x, y, radius = 120) {
+    for (const m of this.mushrooms) {
+      if (m.isSleeping) {
+        const dist = Math.hypot(m.x - x, m.y - y);
+        if (dist < radius + m.radius) {
+          m.isSleeping = false;
+          m.sleepTimer = 0;
+        }
+      }
+    }
+  }
+
+  update(dt, onBounce = null) {
+    const merges = [];
+    const subDt = dt / this.substeps;
+    const subGravity = this.gravity * (subDt * 60);
+
+    for (let step = 0; step < this.substeps; step++) {
+      // 1. Integrate motion for active (non-sleeping) mushrooms
+      for (let i = 0; i < this.mushrooms.length; i++) {
+        const m = this.mushrooms[i];
+        if (m.isMerging || m.isSleeping) continue;
+
+        m.vy += subGravity;
+        m.vx *= Math.pow(this.airResistance, 1 / this.substeps);
+        m.vy *= Math.pow(this.airResistance, 1 / this.substeps);
+
+        m.x += m.vx * subDt * 60;
+        m.y += m.vy * subDt * 60;
+        m.angle += m.angularVelocity * subDt * 60;
+        m.angularVelocity *= 0.95;
+      }
+
+      // 2. Resolve Mushroom vs Straight Flat Walls & Floor
+      for (let i = 0; i < this.mushrooms.length; i++) {
+        const m = this.mushrooms[i];
+        if (m.isMerging) continue;
+        this.resolveWallCollision(m, onBounce, step === 0);
+      }
+
+      // 3. Resolve Mushroom vs Mushroom Collisions & Merges
+      for (let i = 0; i < this.mushrooms.length; i++) {
+        const a = this.mushrooms[i];
+        if (a.isMerging) continue;
+
+        for (let j = i + 1; j < this.mushrooms.length; j++) {
+          const b = this.mushrooms[j];
+          if (b.isMerging) continue;
+
+          // Skip if both are already fast asleep
+          if (a.isSleeping && b.isSleeping) continue;
+
+          let dx = b.x - a.x;
+          let dy = b.y - a.y;
+          let distSq = dx * dx + dy * dy;
+          const minDist = a.radius + b.radius;
+
+          if (distSq < minDist * minDist && distSq > 0.00001) {
+            let dist = Math.sqrt(distSq);
+
+            // Calculate relative speed
+            const relSpeed = Math.hypot(a.vx - b.vx, a.vy - b.vy);
+
+            // Natural unstable equilibrium deflection:
+            // Two curved bodies cannot balance on a single mathematical 0px apex.
+            // If stacked vertically (|dx| < 2.0 and |dy| > 0.3 * minDist),
+            // roll down predictably away from walls without random jitter.
+            if (Math.abs(dx) < 2.0 && Math.abs(dy) > 0.3 * minDist && relSpeed > 0.12) {
+              const { left, right } = this.bounds;
+              let nudgeDir = 0;
+              // If near the left wall, always nudge right (away from wall)
+              if (a.x - a.radius < left + 15 || b.x - b.radius < left + 15) {
+                nudgeDir = 1.2;
+              } else if (a.x + a.radius > right - 15 || b.x + b.radius > right - 15) {
+                // If near the right wall, always nudge left (away from wall)
+                nudgeDir = -1.2;
+              } else {
+                // In open water, use deterministic ID hash so it never flips back and forth
+                nudgeDir = ((a.id + b.id) % 2 === 0 ? 1.0 : -1.0);
+              }
+              dx += nudgeDir;
+              distSq = dx * dx + dy * dy;
+              dist = Math.sqrt(distSq);
+            }
+
+            const nx = dx / dist;
+            const ny = dy / dist;
+
+            // Matching tier merge condition
+            if (a.tier === b.tier && a.tier < 11 && !a.isMerging && !b.isMerging) {
+              a.isMerging = true;
+              b.isMerging = true;
+              merges.push({
+                tier: a.tier,
+                nextTier: a.tier + 1,
+                x: (a.x + b.x) * 0.5,
+                y: (a.y + b.y) * 0.5,
+                m1: a,
+                m2: b
+              });
+              continue;
+            }
+
+            // Only wake a sleeping body if impact or relative motion is significant
+            if (relSpeed > 0.35) {
+              if (a.isSleeping) { a.isSleeping = false; a.sleepTimer = 0; }
+              if (b.isSleeping) { b.isSleeping = false; b.sleepTimer = 0; }
+            }
+
+            // Clean position separation
+            const overlap = minDist - dist;
+            const totalMass = a.mass + b.mass;
+            const aShare = b.mass / totalMass;
+            const bShare = a.mass / totalMass;
+
+            a.x -= nx * overlap * aShare;
+            a.y -= ny * overlap * aShare;
+            b.x += nx * overlap * bShare;
+            b.y += ny * overlap * bShare;
+
+            // Gravitational slope rolling off rounded mushroom caps:
+            if (!b.isSleeping && dy < -0.15 * minDist) {
+              // b is stacked on top of a: gravity creates a natural rolling force off the apex
+              const slopeRoll = (dx / dist) * subGravity * 0.4;
+              // Do not push b into walls
+              if (!(slopeRoll < 0 && b.x - b.radius <= this.bounds.left + 2) &&
+                  !(slopeRoll > 0 && b.x + b.radius >= this.bounds.right - 2)) {
+                b.vx += slopeRoll;
+                b.angularVelocity += slopeRoll * 0.03;
+              }
+            } else if (!a.isSleeping && dy > 0.15 * minDist) {
+              // a is stacked on top of b: gravity creates a natural rolling force off the apex
+              const slopeRoll = (-dx / dist) * subGravity * 0.4;
+              // Do not push a into walls
+              if (!(slopeRoll < 0 && a.x - a.radius <= this.bounds.left + 2) &&
+                  !(slopeRoll > 0 && a.x + a.radius >= this.bounds.right - 2)) {
+                a.vx += slopeRoll;
+                a.angularVelocity += slopeRoll * 0.03;
+              }
+            }
+
+            // Velocity impulse
+            const rvx = b.vx - a.vx;
+            const rvy = b.vy - a.vy;
+            const velAlongNormal = rvx * nx + rvy * ny;
+
+            if (velAlongNormal < 0) {
+              // Very low restitution so it doesn't bounce
+              const impulse = -(1 + this.restitution) * velAlongNormal / (1 / a.mass + 1 / b.mass);
+              const ix = impulse * nx;
+              const iy = impulse * ny;
+
+              a.vx -= ix / a.mass;
+              a.vy -= iy / a.mass;
+              b.vx += ix / b.mass;
+              b.vy += iy / b.mass;
+
+              // Moderate friction so spheres roll and tumble off caps naturally
+              const tx = -ny;
+              const ty = nx;
+              const velAlongTangent = rvx * tx + rvy * ty;
+              const frictionImpulse = -velAlongTangent * this.friction * 0.4;
+              a.vx -= (frictionImpulse * tx) / a.mass;
+              a.vy -= (frictionImpulse * ty) / a.mass;
+              b.vx += (frictionImpulse * tx) / b.mass;
+              b.vy += (frictionImpulse * ty) / b.mass;
+
+              a.angularVelocity *= 0.85;
+              b.angularVelocity *= 0.85;
+
+              // Play soft thud sound on significant impact
+              const impactSpeed = Math.abs(velAlongNormal);
+              if (onBounce && step === 0 && impactSpeed > 2.5) {
+                onBounce((a.radius + b.radius) * 0.5, impactSpeed);
+              }
+            }
+          }
+        }
+      }
+
+      // Post-substep wall clamp: ensure no creature penetrates walls or floor
+      for (let i = 0; i < this.mushrooms.length; i++) {
+        const m = this.mushrooms[i];
+        if (m.isMerging) continue;
+        this.resolveWallCollision(m, null, false);
+      }
+    }
+
+    // 4. Update scale, sleeping state, and stability
+    for (let i = 0; i < this.mushrooms.length; i++) {
+      const m = this.mushrooms[i];
+
+      // Spawn scale animation on merge
+      if (m.scale < m.targetScale) {
+        m.scale += (m.targetScale - m.scale) * 0.25;
+        if (Math.abs(m.scale - m.targetScale) < 0.01) {
+          m.scale = m.targetScale;
+        }
+      }
+
+      // Fast decay of any residual squish
+      m.squishX += (1.0 - m.squishX) * 0.35;
+      m.squishY += (1.0 - m.squishY) * 0.35;
+
+      const speed = Math.hypot(m.vx, m.vy);
+      const isOnFloor = (m.y + m.radius) >= (this.bounds.bottom - 2.0);
+
+      // Resting / Sleep detection:
+      // Floor items can sleep quickly (0.12s). Stacked items require 0.35s of stable settling.
+      if (speed < 0.25 && Math.abs(m.angularVelocity) < 0.05) {
+        m.sleepTimer += dt;
+        m.settledTime += dt;
+        const requiredSleepTime = isOnFloor ? 0.12 : 0.35;
+        if (m.sleepTimer > requiredSleepTime) {
+          m.isSleeping = true;
+          m.vx = 0;
+          m.vy = 0;
+          m.angularVelocity = 0;
+          // Clamp solidly to container bounds
+          if (m.x - m.radius < this.bounds.left) m.x = this.bounds.left + m.radius;
+          if (m.x + m.radius > this.bounds.right) m.x = this.bounds.right - m.radius;
+          if (m.y + m.radius > this.bounds.bottom) m.y = this.bounds.bottom - m.radius;
+        }
+      } else {
+        m.sleepTimer = 0;
+        m.isSleeping = false;
+        m.settledTime = Math.max(0, m.settledTime - dt * 2);
+      }
+
+      // Blinking animation
+      m.blinkTimer -= dt;
+      if (m.blinkTimer <= 0) {
+        if (!m.isBlinking) {
+          m.isBlinking = true;
+          m.blinkTimer = 0.12;
+        } else {
+          m.isBlinking = false;
+          m.blinkTimer = Math.random() * 4 + 2.5;
+        }
+      }
+
+      // No wobbling
+      m.wobble = 0;
+    }
+
+    return merges;
+  }
+
+  /**
+   * Straight Vertical Walls & Flat Bottom Floor:
+   * Edge drops fall straight down and stay exactly in place without drifting.
+   */
+  resolveWallCollision(m, onBounce, isFirstSubstep) {
+    const { left, right, bottom } = this.bounds;
+
+    // Flat bottom floor - no corner arcs to deflect edge drops!
+    if (m.y + m.radius > bottom) {
+      m.y = bottom - m.radius;
+      if (m.vy > 0) {
+        if (isFirstSubstep && m.vy > 2.2 && onBounce) {
+          onBounce(m.radius, m.vy);
+        }
+        // Zero bounce on floor - solid thud!
+        m.vy = 0;
+        m.vx *= 0.7; // high ground friction
+        m.angularVelocity *= 0.7;
+      }
+    }
+
+    // Straight left vertical wall
+    if (m.x - m.radius < left) {
+      m.x = left + m.radius;
+      if (m.vx < 0) {
+        m.vx = 0; // stop horizontal motion instantly against wall
+      }
+      m.angularVelocity *= 0.8;
+    }
+
+    // Straight right vertical wall
+    if (m.x + m.radius > right) {
+      m.x = right - m.radius;
+      if (m.vx > 0) {
+        m.vx = 0; // stop horizontal motion instantly against wall
+      }
+      m.angularVelocity *= 0.8;
+    }
+  }
+
+  /**
+   * Raycast downwards from dropX to find the first landing contact
+   */
+  getLandingPreviewY(dropX, radius) {
+    let landingY = this.bounds.bottom - radius;
+
+    for (let i = 0; i < this.mushrooms.length; i++) {
+      const m = this.mushrooms[i];
+      if (m.isMerging) continue;
+
+      const dx = Math.abs(dropX - m.x);
+      const combinedR = radius + m.radius;
+
+      if (dx < combinedR) {
+        const dy = Math.sqrt(combinedR * combinedR - dx * dx);
+        const contactY = m.y - dy;
+        if (contactY < landingY) {
+          landingY = contactY;
+        }
+      }
+    }
+
+    return landingY;
+  }
+
+  /**
+   * Power-up: Shake the container to jiggle and settle pieces
+   */
+  shake(strength = 7) {
+    for (const m of this.mushrooms) {
+      if (m.isMerging) continue;
+      m.isSleeping = false;
+      m.sleepTimer = 0;
+      m.vx += (Math.random() - 0.5) * strength;
+      m.vy -= Math.random() * (strength * 0.7);
+    }
+  }
+
+  /**
+   * Power-up: Pop the smallest active pastry
+   */
+  popSmallest() {
+    if (this.mushrooms.length === 0) return null;
+    let smallest = null;
+    for (const m of this.mushrooms) {
+      if (m.isMerging) continue;
+      if (!smallest || m.tier < smallest.tier) {
+        smallest = m;
+      }
+    }
+    if (smallest) {
+      const idx = this.mushrooms.indexOf(smallest);
+      if (idx !== -1) {
+        this.mushrooms.splice(idx, 1);
+        return smallest;
+      }
+    }
+    return null;
+  }
+}
