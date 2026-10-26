@@ -917,24 +917,64 @@ body {
   margin-bottom: 16px;
 }
 
-.btn-dialog-close {
-  width: 32px;
-  height: 32px;
+/* Dialog header round close icon (✕) */
+.dialog-header .btn-dialog-close,
+.btn-close-icon {
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
-  background: rgba(230, 210, 190, 0.4);
-  border: 1px solid rgba(200, 160, 120, 0.35);
-  color: var(--text-muted);
-  font-size: 1rem;
+  background: rgba(224, 242, 254, 0.7);
+  border: 1.5px solid rgba(56, 189, 248, 0.5);
+  color: #0369A1;
+  font-size: 1.1rem;
+  font-weight: 700;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.15s;
+  padding: 0;
+  flex-shrink: 0;
 }
 
-.btn-dialog-close:hover {
-  background: rgba(220, 190, 160, 0.7);
-  color: var(--text-main);
+.dialog-header .btn-dialog-close:hover,
+.btn-close-icon:hover {
+  background: #BAE6FD;
+  color: #0C4A6E;
+  transform: scale(1.08);
+}
+
+/* Full-width primary confirmation/action button inside dialogs */
+.dialog-action-btn,
+.dialog-content > .btn.btn-primary {
+  width: 100% !important;
+  height: auto !important;
+  min-height: 52px;
+  padding: 14px 28px !important;
+  font-size: 1.15rem !important;
+  font-weight: 800 !important;
+  border-radius: 999px !important;
+  margin-top: 16px;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #38BDF8 0%, #0284C7 100%);
+  color: #FFFFFF !important;
+  box-shadow: 0 4px 0 #0C4A6E, 0 6px 14px rgba(2, 132, 199, 0.35);
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.dialog-action-btn:hover,
+.dialog-content > .btn.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0 #0C4A6E, 0 8px 18px rgba(2, 132, 199, 0.45);
+}
+
+.dialog-action-btn:active,
+.dialog-content > .btn.btn-primary:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 #0C4A6E, 0 2px 6px rgba(2, 132, 199, 0.3);
 }
 
 .dialog-menu {
