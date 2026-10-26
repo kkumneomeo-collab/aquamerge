@@ -79,6 +79,18 @@ export class PhysicsWorld {
     }
   }
 
+  /**
+   * Wake up all mushrooms in the drop column
+   */
+  wakeColumn(x, width = 160) {
+    for (const m of this.mushrooms) {
+      if (m.isSleeping && Math.abs(m.x - x) < width * 0.5 + m.radius) {
+        m.isSleeping = false;
+        m.sleepTimer = 0;
+      }
+    }
+  }
+
   update(dt, onBounce = null) {
     const merges = [];
     const subDt = dt / this.substeps;
@@ -122,8 +134,15 @@ export class PhysicsWorld {
           const b = this.mushrooms[j];
           if (b.isMerging) continue;
 
-          // Skip if both are already fast asleep
-          if (a.isSleeping && b.isSleeping) continue;
+          // Only skip if both are sleeping and NOT touching
+          if (a.isSleeping && b.isSleeping) {
+            const dx = b.x - a.x;
+            const dy = b.y - a.y;
+            const rSum = a.radius + b.radius;
+            if (dx * dx + dy * dy >= rSum * rSum) {
+              continue;
+            }
+          }
 
           let dx = b.x - a.x;
           let dy = b.y - a.y;
@@ -134,24 +153,12 @@ export class PhysicsWorld {
             distSq = dx * dx + dy * dy;
           }
           let dist = Math.sqrt(distSq);
-
-          const featA = (a.tierData && a.tierData.features) || {};
-          const featB = (b.tierData && b.tierData.features) || {};
-          const axA = featA.aspectX || 1.0;
-          const ayA = featA.aspectY || 1.0;
-          const axB = featB.aspectX || 1.0;
-          const ayB = featB.aspectY || 1.0;
-
-          let nx = dx / dist;
-          let ny = dy / dist;
-
-          // Directional collision radius based on contact angle:
-          // Perfectly eliminates vertical empty gaps while preventing horizontal wall/body clipping
-          const ra = a.radius * Math.hypot(nx * axA, ny * ayA);
-          const rb = b.radius * Math.hypot(nx * axB, ny * ayB);
-          const minDist = ra + rb;
+          const minDist = a.radius + b.radius;
 
           if (dist < minDist) {
+            let nx = dx / dist;
+            let ny = dy / dist;
+
             // Calculate relative speed
             const relSpeed = Math.hypot(a.vx - b.vx, a.vy - b.vy);
 
@@ -162,12 +169,10 @@ export class PhysicsWorld {
             if (Math.abs(dx) < 2.0 && Math.abs(dy) > 0.3 * minDist && relSpeed > 0.12) {
               const { left, right } = this.bounds;
               let nudgeDir = 0;
-              const rxA = a.radius * axA;
-              const rxB = b.radius * axB;
               // If near the left wall, always nudge right (away from wall)
-              if (a.x - rxA < left + 15 || b.x - rxB < left + 15) {
+              if (a.x - a.radius < left + 15 || b.x - b.radius < left + 15) {
                 nudgeDir = 1.2;
-              } else if (a.x + rxA > right - 15 || b.x + rxB > right - 15) {
+              } else if (a.x + a.radius > right - 15 || b.x + b.radius > right - 15) {
                 // If near the right wall, always nudge left (away from wall)
                 nudgeDir = -1.2;
               } else {
@@ -196,16 +201,14 @@ export class PhysicsWorld {
               continue;
             }
 
-            // Only wake a sleeping body if impact or relative motion is strong
-            if (relSpeed > 0.6) {
-              if (a.isSleeping) { a.isSleeping = false; a.sleepTimer = 0; }
-              if (b.isSleeping) { b.isSleeping = false; b.sleepTimer = 0; }
-            }
+            // Overlapping bodies CANNOT stay asleep! Wake them so they push apart
+            if (a.isSleeping) { a.isSleeping = false; a.sleepTimer = 0; }
+            if (b.isSleeping) { b.isSleeping = false; b.sleepTimer = 0; }
 
-            // Clean position separation with gentle relaxation to eliminate multi-body vibration
+            // Clean position separation - NO clamp so overlap is 100% eliminated!
             const overlap = minDist - dist;
             if (overlap > 0) {
-              const sep = Math.min(overlap * 0.85, 4.0);
+              const sep = overlap * 0.85;
               // Clamp mass ratio so small bodies don't blast large heavy creatures
               const clampedMassA = Math.max(a.mass, b.mass * 0.2);
               const clampedMassB = Math.max(b.mass, a.mass * 0.2);
@@ -221,18 +224,16 @@ export class PhysicsWorld {
 
             // Gravitational slope rolling off rounded caps:
             // Only smaller or similar-sized creatures roll off (never a giant otter off a tiny nudibranch!)
-            const rxA = a.radius * axA;
-            const rxB = b.radius * axB;
             if (!b.isSleeping && dy < -0.2 * minDist && b.radius <= a.radius * 1.25) {
               const slopeRoll = (dx / dist) * subGravity * 0.35;
-              if (!(slopeRoll < 0 && b.x - rxB <= this.bounds.left + 2) &&
-                  !(slopeRoll > 0 && b.x + rxB >= this.bounds.right - 2)) {
+              if (!(slopeRoll < 0 && b.x - b.radius <= this.bounds.left + 2) &&
+                  !(slopeRoll > 0 && b.x + b.radius >= this.bounds.right - 2)) {
                 b.vx += slopeRoll;
               }
             } else if (!a.isSleeping && dy > 0.2 * minDist && a.radius <= b.radius * 1.25) {
               const slopeRoll = (-dx / dist) * subGravity * 0.35;
-              if (!(slopeRoll < 0 && a.x - rxA <= this.bounds.left + 2) &&
-                  !(slopeRoll > 0 && a.x + rxA >= this.bounds.right - 2)) {
+              if (!(slopeRoll < 0 && a.x - a.radius <= this.bounds.left + 2) &&
+                  !(slopeRoll > 0 && a.x + a.radius >= this.bounds.right - 2)) {
                 a.vx += slopeRoll;
               }
             }
@@ -320,7 +321,7 @@ export class PhysicsWorld {
       if (speed < 0.35 && Math.abs(m.angularVelocity) < 0.08) {
         m.sleepTimer += dt;
         m.settledTime += dt;
-        const requiredSleepTime = isOnFloor ? 0.10 : 0.25;
+        const requiredSleepTime = isOnFloor ? 0.35 : 0.50;
         if (m.sleepTimer > requiredSleepTime) {
           m.isSleeping = true;
           m.vx = 0;
@@ -418,12 +419,10 @@ export class PhysicsWorld {
       const mAy = mFeat.aspectY || 1.0;
 
       const dx = Math.abs(dropX - m.x);
-      const combX = radius * heldAx + m.radius * mAx;
+      const combinedR = radius + m.radius;
 
-      if (dx < combX) {
-        const combY = radius * heldAy + m.radius * mAy;
-        const normX = dx / combX;
-        const dy = combY * Math.sqrt(Math.max(0, 1.0 - normX * normX));
+      if (dx < combinedR) {
+        const dy = Math.sqrt(combinedR * combinedR - dx * dx);
         const contactY = m.y - dy;
         if (contactY < landingY) {
           landingY = contactY;

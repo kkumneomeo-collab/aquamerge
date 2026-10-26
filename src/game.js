@@ -181,8 +181,8 @@ export class GameManager {
       try { navigator.vibrate(10); } catch (_) {}
     }
 
-    // Wake up any sleeping pastries near the drop trajectory so they react if struck
-    this.world.wakeNearby(this.dropX, 150, 100);
+    // Wake up any sleeping creatures in the drop trajectory so they react naturally
+    this.world.wakeColumn(this.dropX, 160);
 
     // Spawn pastry into the physics world
     const feat = this.currentTierData.features || {};
