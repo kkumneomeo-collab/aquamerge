@@ -97,7 +97,13 @@ export class PhysicsWorld {
         m.x += m.vx * subDt * 60;
         m.y += m.vy * subDt * 60;
         m.angle += m.angularVelocity * subDt * 60;
-        m.angularVelocity *= 0.95;
+        // Natural aquatic upright buoyancy torque
+        m.angularVelocity += -m.angle * 0.08;
+        m.angularVelocity *= 0.82;
+        if (Math.abs(m.angle) < 0.008 && Math.abs(m.angularVelocity) < 0.015) {
+          m.angle = 0;
+          m.angularVelocity = 0;
+        }
       }
 
       // 2. Resolve Mushroom vs Straight Flat Walls & Floor
@@ -170,41 +176,42 @@ export class PhysicsWorld {
               continue;
             }
 
-            // Only wake a sleeping body if impact or relative motion is significant
-            if (relSpeed > 0.35) {
+            // Only wake a sleeping body if impact or relative motion is strong
+            if (relSpeed > 0.6) {
               if (a.isSleeping) { a.isSleeping = false; a.sleepTimer = 0; }
               if (b.isSleeping) { b.isSleeping = false; b.sleepTimer = 0; }
             }
 
-            // Clean position separation
+            // Clean position separation with gentle relaxation to eliminate multi-body vibration
             const overlap = minDist - dist;
-            const totalMass = a.mass + b.mass;
-            const aShare = b.mass / totalMass;
-            const bShare = a.mass / totalMass;
+            if (overlap > 0) {
+              const sep = Math.min(overlap * 0.85, 4.0);
+              // Clamp mass ratio so small bodies don't blast large heavy creatures
+              const clampedMassA = Math.max(a.mass, b.mass * 0.2);
+              const clampedMassB = Math.max(b.mass, a.mass * 0.2);
+              const totalMass = clampedMassA + clampedMassB;
+              const aShare = clampedMassB / totalMass;
+              const bShare = clampedMassA / totalMass;
 
-            a.x -= nx * overlap * aShare;
-            a.y -= ny * overlap * aShare;
-            b.x += nx * overlap * bShare;
-            b.y += ny * overlap * bShare;
+              a.x -= nx * sep * aShare;
+              a.y -= ny * sep * aShare;
+              b.x += nx * sep * bShare;
+              b.y += ny * sep * bShare;
+            }
 
-            // Gravitational slope rolling off rounded mushroom caps:
-            if (!b.isSleeping && dy < -0.15 * minDist) {
-              // b is stacked on top of a: gravity creates a natural rolling force off the apex
-              const slopeRoll = (dx / dist) * subGravity * 0.4;
-              // Do not push b into walls
+            // Gravitational slope rolling off rounded caps:
+            // Only smaller or similar-sized creatures roll off (never a giant otter off a tiny nudibranch!)
+            if (!b.isSleeping && dy < -0.2 * minDist && b.radius <= a.radius * 1.25) {
+              const slopeRoll = (dx / dist) * subGravity * 0.35;
               if (!(slopeRoll < 0 && b.x - b.radius <= this.bounds.left + 2) &&
                   !(slopeRoll > 0 && b.x + b.radius >= this.bounds.right - 2)) {
                 b.vx += slopeRoll;
-                b.angularVelocity += slopeRoll * 0.03;
               }
-            } else if (!a.isSleeping && dy > 0.15 * minDist) {
-              // a is stacked on top of b: gravity creates a natural rolling force off the apex
-              const slopeRoll = (-dx / dist) * subGravity * 0.4;
-              // Do not push a into walls
+            } else if (!a.isSleeping && dy > 0.2 * minDist && a.radius <= b.radius * 1.25) {
+              const slopeRoll = (-dx / dist) * subGravity * 0.35;
               if (!(slopeRoll < 0 && a.x - a.radius <= this.bounds.left + 2) &&
                   !(slopeRoll > 0 && a.x + a.radius >= this.bounds.right - 2)) {
                 a.vx += slopeRoll;
-                a.angularVelocity += slopeRoll * 0.03;
               }
             }
 
@@ -213,8 +220,8 @@ export class PhysicsWorld {
             const rvy = b.vy - a.vy;
             const velAlongNormal = rvx * nx + rvy * ny;
 
-            if (velAlongNormal < 0) {
-              // Very low restitution so it doesn't bounce
+            if (velAlongNormal < -0.25) {
+              // Only apply restitution impulse if closing velocity is significant
               const impulse = -(1 + this.restitution) * velAlongNormal / (1 / a.mass + 1 / b.mass);
               const ix = impulse * nx;
               const iy = impulse * ny;
@@ -224,7 +231,7 @@ export class PhysicsWorld {
               b.vx += ix / b.mass;
               b.vy += iy / b.mass;
 
-              // Moderate friction so spheres roll and tumble off caps naturally
+              // Moderate friction
               const tx = -ny;
               const ty = nx;
               const velAlongTangent = rvx * tx + rvy * ty;
@@ -234,14 +241,22 @@ export class PhysicsWorld {
               b.vx += (frictionImpulse * tx) / b.mass;
               b.vy += (frictionImpulse * ty) / b.mass;
 
-              a.angularVelocity *= 0.85;
-              b.angularVelocity *= 0.85;
+              a.angularVelocity *= 0.8;
+              b.angularVelocity *= 0.8;
 
               // Play soft thud sound on significant impact
               const impactSpeed = Math.abs(velAlongNormal);
               if (onBounce && step === 0 && impactSpeed > 2.5) {
                 onBounce((a.radius + b.radius) * 0.5, impactSpeed);
               }
+            } else if (velAlongNormal < 0) {
+              // Micro-contacts: damp velocities directly without bouncy impulses to eliminate jitter
+              a.vx *= 0.92;
+              a.vy *= 0.92;
+              b.vx *= 0.92;
+              b.vy *= 0.92;
+              a.angularVelocity *= 0.8;
+              b.angularVelocity *= 0.8;
             }
           }
         }
@@ -275,16 +290,17 @@ export class PhysicsWorld {
       const isOnFloor = (m.y + m.radius) >= (this.bounds.bottom - 2.0);
 
       // Resting / Sleep detection:
-      // Floor items can sleep quickly (0.12s). Stacked items require 0.35s of stable settling.
-      if (speed < 0.25 && Math.abs(m.angularVelocity) < 0.05) {
+      // Floor items sleep in 0.10s. Stacked/crowded items require 0.25s of stable settling.
+      if (speed < 0.35 && Math.abs(m.angularVelocity) < 0.08) {
         m.sleepTimer += dt;
         m.settledTime += dt;
-        const requiredSleepTime = isOnFloor ? 0.12 : 0.35;
+        const requiredSleepTime = isOnFloor ? 0.10 : 0.25;
         if (m.sleepTimer > requiredSleepTime) {
           m.isSleeping = true;
           m.vx = 0;
           m.vy = 0;
           m.angularVelocity = 0;
+          m.angle = 0; // Lock perfectly upright!
           // Clamp solidly to container bounds
           if (m.x - m.radius < this.bounds.left) m.x = this.bounds.left + m.radius;
           if (m.x + m.radius > this.bounds.right) m.x = this.bounds.right - m.radius;

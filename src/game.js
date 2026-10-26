@@ -164,8 +164,8 @@ export class GameManager {
   clampDropX() {
     if (!this.currentTierData) return;
     const r = this.currentTierData.radius;
-    const minX = this.bounds.left + r + 1;
-    const maxX = this.bounds.right - r - 1;
+    const minX = this.bounds.left + r + 4;
+    const maxX = this.bounds.right - r - 4;
     this.dropX = Math.max(minX, Math.min(maxX, this.dropX));
   }
 

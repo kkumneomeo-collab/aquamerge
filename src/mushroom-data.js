@@ -16,7 +16,7 @@ export const MUSHROOM_TIERS = [
     imageSrc: 'assets/seacreatures/tier1_nudibranch.png',
     blinkSrc: 'assets/seacreatures/tier1_nudibranch_blink.png',
     features: {
-      drawScale: 2.18,
+      drawScale: 1.95,
       offsetX: 0,
       offsetY: 0,
       glow: null
@@ -35,7 +35,7 @@ export const MUSHROOM_TIERS = [
     imageSrc: 'assets/seacreatures/tier2_orange_fish.png',
     blinkSrc: 'assets/seacreatures/tier2_orange_fish_blink.png',
     features: {
-      drawScale: 2.18,
+      drawScale: 1.92,
       offsetX: 0,
       offsetY: 0,
       glow: null
@@ -54,7 +54,7 @@ export const MUSHROOM_TIERS = [
     imageSrc: 'assets/seacreatures/tier3_sea_urchin.png',
     blinkSrc: 'assets/seacreatures/tier3_sea_urchin_blink.png',
     features: {
-      drawScale: 2.2,
+      drawScale: 1.90,
       offsetX: 0,
       offsetY: 0,
       glow: null
@@ -73,7 +73,7 @@ export const MUSHROOM_TIERS = [
     imageSrc: 'assets/seacreatures/tier4_lobster.png',
     blinkSrc: 'assets/seacreatures/tier4_lobster_blink.png',
     features: {
-      drawScale: 2.2,
+      drawScale: 1.90,
       offsetX: 0,
       offsetY: 0,
       glow: null
@@ -92,7 +92,7 @@ export const MUSHROOM_TIERS = [
     imageSrc: 'assets/seacreatures/tier5_nautilus.png',
     blinkSrc: 'assets/seacreatures/tier5_nautilus_blink.png',
     features: {
-      drawScale: 2.18,
+      drawScale: 1.90,
       offsetX: 0,
       offsetY: 0,
       glow: null
@@ -111,7 +111,7 @@ export const MUSHROOM_TIERS = [
     imageSrc: 'assets/seacreatures/tier6_moray_eel.png',
     blinkSrc: 'assets/seacreatures/tier6_moray_eel_blink.png',
     features: {
-      drawScale: 2.2,
+      drawScale: 1.90,
       offsetX: 0,
       offsetY: 0,
       glow: null
@@ -130,7 +130,7 @@ export const MUSHROOM_TIERS = [
     imageSrc: 'assets/seacreatures/tier7_axolotl.png',
     blinkSrc: 'assets/seacreatures/tier7_axolotl_blink.png',
     features: {
-      drawScale: 2.24,
+      drawScale: 1.88,
       offsetX: 0,
       offsetY: 0,
       glow: '#F472B6'
@@ -149,7 +149,7 @@ export const MUSHROOM_TIERS = [
     imageSrc: 'assets/seacreatures/tier8_sea_otter.png',
     blinkSrc: 'assets/seacreatures/tier8_sea_otter_blink.png',
     features: {
-      drawScale: 2.25,
+      drawScale: 1.85,
       offsetX: 0,
       offsetY: 0,
       glow: '#F59E0B'
@@ -168,7 +168,7 @@ export const MUSHROOM_TIERS = [
     imageSrc: 'assets/seacreatures/tier9_clam_pearl.png',
     blinkSrc: 'assets/seacreatures/tier9_clam_pearl_blink.png',
     features: {
-      drawScale: 2.28,
+      drawScale: 1.85,
       offsetX: 0,
       offsetY: 0,
       glow: '#38BDF8'
@@ -187,7 +187,7 @@ export const MUSHROOM_TIERS = [
     imageSrc: 'assets/seacreatures/tier10_orca.png',
     blinkSrc: 'assets/seacreatures/tier10_orca_blink.png',
     features: {
-      drawScale: 2.32,
+      drawScale: 1.88,
       offsetX: 0,
       offsetY: 0,
       glow: '#38BDF8'

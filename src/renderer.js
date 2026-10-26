@@ -252,9 +252,15 @@ export class TerrariumRenderer {
     }
 
     // 5. Render Settled & Falling Pastries in Box
+    ctx.save();
+    // Clip strictly to inside the aquarium box so creatures never poke outside
+    ctx.beginPath();
+    ctx.rect(bounds.left - 1, bounds.top - 25, (bounds.right - bounds.left) + 2, (bounds.bottom - bounds.top) + 2);
+    ctx.clip();
     for (const m of world.mushrooms) {
       this.renderMushroom(ctx, m, dangerLineY, isDangerActive);
     }
+    ctx.restore();
 
     // 6. Render Transparent 3D Acrylic Box Frame & Highlights
     this.renderGlassJar(ctx, bounds);
@@ -610,7 +616,7 @@ export class TerrariumRenderer {
 
   renderDropper(ctx, dropX, heldMushroom, canDrop) {
     ctx.save();
-    ctx.translate(dropX, 58);
+    ctx.translate(dropX, 74);
 
     // Held sea creature static at top
     const bob = 0;
@@ -645,8 +651,8 @@ export class TerrariumRenderer {
 
     ctx.save();
     ctx.translate(m.x, m.y);
-    // When sleeping/resting, gentle upright bias so cute characters stay upright!
-    const rot = m.isSleeping ? (m.angle * 0.22) : (m.angle * 0.45);
+    // Upright bias so cute sea creatures stay upright without tipping into walls
+    const rot = m.isSleeping ? 0 : (m.angle * 0.12);
     ctx.rotate(rot);
     ctx.scale(m.scale * m.squishX, m.scale * m.squishY);
 
