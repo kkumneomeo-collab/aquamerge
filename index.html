@@ -3,15 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>AquaMerge: Cozy Ocean Aquarium</title>
-  <meta name="description" content="A cozy ocean merge puzzle game. Drop adorable living sea creatures into a clear aquarium, combine matching marine friends, and chase high scores in a light blue ocean paradise!">
+  <title>PlushMerge: Cozy Plushie Toybox</title>
+  <meta name="description" content="A cozy plushie merge puzzle game. Drop adorable felt and cotton plushie friends into your toybox, combine matching stuffed animals, and create the legendary Celestial Axolotl!">
   
   <!-- Mobile & PWA App Setup -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="AquaMerge">
-  <meta name="theme-color" content="#E0F2FE">
+  <meta name="apple-mobile-web-app-title" content="PlushMerge">
+  <meta name="theme-color" content="#FFFBEB">
   <link rel="manifest" href="manifest.json">
 
   <!-- Typography -->
@@ -20,13 +20,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   
   <!-- Favicon -->
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐬</text></svg>">
-  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐬</text></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧸</text></svg>">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧸</text></svg>">
 
-  <link rel="stylesheet" href="style.css?v=20261026_ocean">
+  <link rel="stylesheet" href="style.css?v=20261027_plushies">
 </head>
 <body>
-  <!-- Ambient Ocean Aquarium Backdrop with Floating Bubbles -->
+  <!-- Ambient Cozy Toybox Nursery Backdrop with Stitched Quilt & Sparkles -->
   <div class="forest-backdrop">
     <div class="light-ray ray-1"></div>
     <div class="light-ray ray-2"></div>
@@ -41,11 +41,11 @@
       <!-- Left Sidebar: Previews & Controls (Desktop & Wide Screen) -->
       <aside class="dashboard-side side-left" id="dashboard-left">
         <div class="preview-card glass-panel">
-          <span class="preview-label">NEXT CREATURE</span>
+          <span class="preview-label">NEXT PLUSHIE</span>
           <div class="preview-canvas-box">
             <canvas id="hud-next-canvas-desktop" width="76" height="76"></canvas>
           </div>
-          <span class="preview-name" id="hud-next-name-desktop">Sea Bunny</span>
+          <span class="preview-name" id="hud-next-name-desktop">Sweet Berry</span>
           <span class="preview-sub">Next drop in queue</span>
         </div>
 
@@ -59,7 +59,7 @@
         </div>
 
         <div class="controls-cheatsheet glass-panel">
-          <span class="cheat-title">Aquarium Guide</span>
+          <span class="cheat-title">Toybox Guide</span>
           <div class="cheat-item"><span class="key-badge">Mouse</span> Aim & Drop</div>
           <div class="cheat-item"><span class="key-badge">A / D / ← →</span> Aim dropper</div>
           <div class="cheat-item"><span class="key-badge">Space / ↓</span> Release drop</div>
@@ -87,17 +87,17 @@
             </div>
           </div>
 
-          <button class="header-btn" id="btn-header-restart" title="Restart Aquarium" aria-label="Restart">↻</button>
+          <button class="header-btn" id="btn-header-restart" title="Restart Toybox" aria-label="Restart">↻</button>
         </header>
 
         <!-- Action / Sub Bar: Powerups (Shake, Bomb) & Next Queue -->
         <div class="mobile-sub-bar" id="game-mobile-subbar">
           <div class="powerup-group">
-            <button class="powerup-btn" id="btn-powerup-shake" title="Shake Tank" aria-label="Shake Tank">
+            <button class="powerup-btn" id="btn-powerup-shake" title="Shake Toybox" aria-label="Shake Toybox">
               <span class="pw-icon">📳</span>
               <span class="pw-badge">▶</span>
             </button>
-            <button class="powerup-btn" id="btn-powerup-bomb" title="Pop Smallest" aria-label="Pop Smallest">
+            <button class="powerup-btn" id="btn-powerup-bomb" title="Drop Plush Bomb (3s Blast)" aria-label="Drop Plush Bomb (3s Blast)">
               <span class="pw-icon">💣</span>
               <span class="pw-badge">▶</span>
             </button>
@@ -130,42 +130,42 @@
 
           <!-- Discovery Announcement Banner -->
           <div class="discovery-banner hidden" id="discovery-banner">
-            <div class="banner-sparkle">🫧</div>
+            <div class="banner-sparkle">✨</div>
             <div class="banner-text">
-              <span class="banner-sub">NEW SEA FRIEND DISCOVERED!</span>
-              <h2 class="discovery-name">Sea Bunny</h2>
-              <span class="discovery-species">Jorunna parva</span>
+              <span class="banner-sub">NEW PLUSHIE DISCOVERED!</span>
+              <h2 class="discovery-name">Sweet Berry</h2>
+              <span class="discovery-species">Fragaria Amabilis</span>
             </div>
           </div>
 
           <!-- Title Screen Overlay -->
           <section class="title-overlay" id="title-screen">
             <div class="title-content">
-              <div class="title-badge">COZY OCEAN AQUARIUM MERGE</div>
+              <div class="title-badge">COZY PLUSHIE MERGE PUZZLE</div>
               <h1 class="game-logo">
-                <span class="logo-text">AquaMerge</span>
-                <span class="logo-sub">Cozy Ocean Aquarium</span>
+                <span class="logo-text">PlushMerge</span>
+                <span class="logo-sub">Cozy Plushie Toybox</span>
               </h1>
 
               <div class="title-hero-preview">
-                <img src="assets/seacreatures/tier1_nudibranch.png" alt="Sea Bunny" class="title-pastry-img pastry-left">
-                <img src="assets/seacreatures/tier7_axolotl.png" alt="Axolotl" class="title-pastry-img pastry-center">
-                <img src="assets/seacreatures/tier10_orca.png" alt="Orca" class="title-pastry-img pastry-right">
+                <img src="assets/plushies/tier1_strawberry.png" alt="Sweet Berry Plushie" class="title-pastry-img pastry-left">
+                <img src="assets/plushies/tier6_bunny.png" alt="Moonlight Bunny Plushie" class="title-pastry-img pastry-center">
+                <img src="assets/plushies/tier10_axolotl.png" alt="Celestial Axolotl Plushie" class="title-pastry-img pastry-right">
               </div>
 
               <div class="title-best-card">
-                <span class="title-best-label">Aquarium High Score</span>
+                <span class="title-best-label">Toybox High Score</span>
                 <span class="title-best-val" id="title-best-score">0</span>
               </div>
 
               <div class="title-menu-actions">
                 <button class="btn btn-primary btn-large pulse-glow" id="btn-play-game">
-                  <span class="btn-icon">🐬</span>
-                  <span>Drop & Splash</span>
+                  <span class="btn-icon">🧸</span>
+                  <span>Drop & Cuddle</span>
                 </button>
                 <button class="btn btn-secondary" id="btn-title-fungidex">
                   <span class="btn-icon">📖</span>
-                  <span>The Aquadex (10 Sea Friends)</span>
+                  <span>The Plushdex (10 Stuffed Friends)</span>
                 </button>
                 <div class="button-row">
                   <button class="btn btn-tertiary" id="btn-title-tutorial">
@@ -213,7 +213,7 @@
         <div class="sidebar-actions">
           <button class="btn btn-secondary side-btn" id="btn-side-fungidex">
             <span class="btn-icon">📖</span>
-            <span>The Aquadex</span>
+            <span>The Plushdex</span>
           </button>
           <button class="btn btn-secondary side-btn" id="btn-side-tutorial">
             <span class="btn-icon">❓</span>
@@ -230,9 +230,9 @@
         </div>
 
         <div class="mini-ladder glass-panel">
-          <span class="ladder-title">Sea Evolution Chain</span>
+          <span class="ladder-title">Plush Evolution Chain</span>
           <div class="ladder-list" id="ladder-list">
-            <!-- Populated dynamically with 10 sea creature dots -->
+            <!-- Populated dynamically with 10 plushie dots -->
           </div>
         </div>
       </aside>
@@ -244,18 +244,18 @@
   <dialog id="pause-dialog" class="glass-dialog">
     <div class="dialog-content">
       <div class="dialog-header">
-        <h2>Aquarium Paused</h2>
+        <h2>Toybox Paused</h2>
         <button class="btn-dialog-close" aria-label="Close dialog">✕</button>
       </div>
-      <p class="dialog-sub">Take a calm breath and watch gentle bubbles float.</p>
+      <p class="dialog-sub">Take a cozy break with your cuddly stuffed friends.</p>
       <div class="dialog-menu">
         <button class="btn btn-primary" id="btn-pause-resume">
           <span class="btn-icon">▶</span>
-          <span>Resume Aquarium</span>
+          <span>Resume Playing</span>
         </button>
         <button class="btn btn-pause-restart" id="btn-pause-restart">
           <span class="btn-icon">🔄</span>
-          <span>Restart Game</span>
+          <span>Restart Toybox</span>
         </button>
         <button class="btn btn-secondary" id="btn-pause-settings">
           <span class="btn-icon">⚙️</span>
@@ -273,7 +273,7 @@
   <dialog id="settings-dialog" class="glass-dialog">
     <div class="dialog-content">
       <div class="dialog-header">
-        <h2>Aquarium Settings</h2>
+        <h2>Toybox Settings</h2>
         <button class="btn-dialog-close" aria-label="Close dialog">✕</button>
       </div>
       <div class="settings-list">
@@ -282,7 +282,7 @@
           <input type="range" id="slider-sfx-vol" min="0" max="100" value="80">
         </div>
         <div class="setting-item">
-          <label for="slider-music-vol">Calm Ocean Kalimba (BGM)</label>
+          <label for="slider-music-vol">Cozy Music Box (BGM)</label>
           <input type="range" id="slider-music-vol" min="0" max="100" value="50">
         </div>
         <div class="setting-item toggle-row">
@@ -307,12 +307,12 @@
     </div>
   </dialog>
 
-  <!-- Modal Dialog: The Aquadex (Compendium) -->
+  <!-- Modal Dialog: The Plushdex (Compendium) -->
   <dialog id="fungidex-dialog" class="glass-dialog large-dialog">
     <div class="dialog-content">
       <div class="dialog-header">
         <div>
-          <h2>The Aquadex</h2>
+          <h2>The Plushdex</h2>
           <span class="dialog-sub" id="fungidex-progress">0 / 10 Discovered</span>
         </div>
         <button class="btn-dialog-close" aria-label="Close dialog">✕</button>
@@ -329,7 +329,7 @@
   <dialog id="tutorial-dialog" class="glass-dialog">
     <div class="dialog-content">
       <div class="dialog-header">
-        <h2>How to Splash & Merge</h2>
+        <h2>How to Cuddle & Merge</h2>
         <button class="btn-dialog-close" aria-label="Close dialog">✕</button>
       </div>
       <div class="tutorial-steps">
@@ -337,28 +337,35 @@
           <div class="step-num">1</div>
           <div class="step-body">
             <h3>Aim & Position</h3>
-            <p>Slide your mouse, drag on touchscreen, or use <strong>A / D / Arrow Keys</strong> to position the sea friend.</p>
+            <p>Slide your mouse, drag on touchscreen, or use <strong>A / D / Arrow Keys</strong> to position the plushie.</p>
           </div>
         </div>
         <div class="tutorial-card">
           <div class="step-num">2</div>
           <div class="step-body">
-            <h3>Drop into the Tank</h3>
-            <p>Click, tap, or release finger (or press <strong>Space / Down Arrow</strong>) to drop the creature into the water.</p>
+            <h3>Drop into the Toybox</h3>
+            <p>Click, tap, or release finger (or press <strong>Space / Down Arrow</strong>) to drop the cuddly toy into the box.</p>
           </div>
         </div>
         <div class="tutorial-card">
           <div class="step-num">3</div>
           <div class="step-body">
-            <h3>Merge Matching Friends</h3>
-            <p>When two matching sea creatures touch, they burst into bubbly pops and merge into a higher tier!</p>
+            <h3>Merge Matching Plushies</h3>
+            <p>When two matching plushies touch, they pop into fluffy cotton stars and evolve into a bigger cute friend!</p>
+          </div>
+        </div>
+        <div class="tutorial-card">
+          <div class="step-num">💣</div>
+          <div class="step-body">
+            <h3>3-Second Plush Bomb</h3>
+            <p>Click the <strong>Bomb</strong> power-up to arm the dropper. Drop it into the box, wait 3 seconds, and <strong>BOOM</strong>—it blasts nearby plushies!</p>
           </div>
         </div>
         <div class="tutorial-card warning-card">
           <div class="step-num">⚠️</div>
           <div class="step-body">
-            <h3>Beware the Ocean Surface!</h3>
-            <p>Keep the creatures below the top warning line. If the tank overflows for over 3.5 seconds, the game ends!</p>
+            <h3>Beware the Toybox Brim!</h3>
+            <p>Keep plushies below the top dashed warning line. If the toybox overflows for over 3.5 seconds, the game ends!</p>
           </div>
         </div>
       </div>
@@ -366,7 +373,7 @@
     </div>
   </dialog>
 
-  <!-- Modal Dialog: Results / Game Over (Casual 3D Style in Ocean Blue Theme) -->
+  <!-- Modal Dialog: Results / Game Over (Casual 3D Style in Plush Theme) -->
   <dialog id="results-dialog" class="glass-dialog casual-theme-dialog">
     <div class="casual-dialog-card">
       
@@ -382,19 +389,19 @@
         <div class="casual-title-wrap">
           <h2 class="casual-result-title">
             <span class="title-star left">✦</span>
-            <span>Aquarium Dive</span>
+            <span>Toybox Full!</span>
             <span class="title-star right">✦</span>
           </h2>
           <div class="casual-sub-line">
             <span class="sub-flourish">──</span>
-            <span class="dialog-sub">Finished</span>
+            <span class="dialog-sub">All Tucked In</span>
             <span class="sub-flourish">──</span>
           </div>
         </div>
 
         <!-- Dual 3D Featured Pedestals -->
         <div class="casual-pedestals-row">
-          <!-- Left Pedestal: Highest Sea Creature -->
+          <!-- Left Pedestal: Highest Plushie -->
           <div class="casual-pedestal-item">
             <div class="pedestal-podium purple-podium">
               <div class="podium-surface">
@@ -404,8 +411,8 @@
               <div class="podium-ground-glow purple-glow"></div>
             </div>
             <div class="pedestal-labels">
-              <span class="pedestal-primary-text" id="result-highest-name">Purple Sea Urchin</span>
-              <span class="pedestal-sub-label">Highest Creature</span>
+              <span class="pedestal-primary-text" id="result-highest-name">Fluffy Bat</span>
+              <span class="pedestal-sub-label">Highest Plushie</span>
             </div>
           </div>
 
@@ -434,62 +441,62 @@
 
         <!-- 3D Casual Records List -->
         <div class="casual-records-list">
-          <!-- Row 1: Dive Score -->
+          <!-- Row 1: Final Score -->
           <div class="casual-record-card card-harvest">
             <div class="record-rank-circle rank-gold">
               <span>1</span>
             </div>
             <div class="record-main-label">
-              <span>Dive Score</span>
+              <span>Final Score</span>
             </div>
             <div class="record-token-pill">
-              <span class="token-symbol">🫧</span>
+              <span class="token-symbol">✨</span>
               <span class="token-value highlight" id="result-final-score">0</span>
             </div>
             <div class="record-badge-icon">🏆</div>
           </div>
 
-          <!-- Row 2: Creatures Merged -->
+          <!-- Row 2: Plushies Merged -->
           <div class="casual-record-card card-merges">
             <div class="record-rank-circle rank-silver">
               <span>2</span>
             </div>
             <div class="record-main-label">
-              <span>Friends Merged</span>
+              <span>Plushies Merged</span>
             </div>
             <div class="record-token-pill">
-              <span class="token-symbol">✨</span>
+              <span class="token-symbol">🧸</span>
               <span class="token-value" id="result-total-merges">0</span>
             </div>
-            <div class="record-badge-icon">🐬</div>
+            <div class="record-badge-icon">⭐</div>
           </div>
 
-          <!-- Row 3: Diver Status -->
+          <!-- Row 3: Player Title -->
           <div class="casual-record-card card-player">
             <div class="record-rank-circle rank-player">
-              <span>🤿</span>
+              <span>🎀</span>
             </div>
             <div class="record-main-label">
-              <span>Ocean Diver</span>
+              <span>Plushie Collector</span>
             </div>
             <div class="record-token-pill pill-player">
               <span class="token-symbol">⭐</span>
-              <span class="token-value">Marine Master</span>
+              <span class="token-value">Toybox Master</span>
             </div>
             <div class="record-badge-icon">🏅</div>
           </div>
         </div>
 
-        <!-- Bottom Mega 3D "Claim & Splash" Capsule Button -->
+        <!-- Bottom Mega 3D "Claim & Cuddle" Capsule Button -->
         <div class="casual-cta-section">
           <button class="btn-mega-claim pulse-glow" id="btn-result-retry">
-            <span>Claim & Splash</span>
+            <span>Play Again</span>
           </button>
           
           <div class="casual-actions-row">
             <button class="btn-casual-secondary" id="btn-result-fungidex">
               <span class="btn-icon">📖</span>
-              <span>The Aquadex</span>
+              <span>The Plushdex</span>
             </button>
             <button class="btn-casual-secondary" id="btn-result-title">
               <span class="btn-icon">🏡</span>
@@ -502,6 +509,6 @@
     </div>
   </dialog>
 
-  <script type="module" src="src/game.js?v=20261026_radialshape"></script>
+  <script type="module" src="src/game.js?v=20261027_plushies"></script>
 </body>
 </html>

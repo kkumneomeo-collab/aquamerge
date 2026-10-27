@@ -39,6 +39,7 @@ export class PhysicsWorld {
   }
 
   addMushroom(x, y, tierData, isDrop = false) {
+    const isBomb = !!(tierData.isBomb || tierData.tier === 99 || tierData.id === 'plush_bomb');
     const mushroom = {
       id: this.nextId++,
       x,
@@ -48,9 +49,9 @@ export class PhysicsWorld {
       radius: tierData.radius,
       tier: tierData.tier,
       tierData,
-      mass: Math.PI * tierData.radius * tierData.radius,
+      mass: Math.PI * tierData.radius * tierData.radius * (isBomb ? 1.5 : 1.0),
       angle: 0,
-      angularVelocity: 0,
+      angularVelocity: isBomb ? (Math.random() - 0.5) * 0.05 : 0,
       scale: isDrop ? 1.0 : 0.3,
       targetScale: 1.0,
       squishX: 1.0,
@@ -60,6 +61,13 @@ export class PhysicsWorld {
       sleepTimer: 0,
       settledTime: 0,
       createdAt: performance.now(),
+      // Bomb properties (3 seconds fuse timer)
+      isBomb,
+      fuseTimer: isBomb ? 3.0 : 0,
+      maxFuse: isBomb ? 3.0 : 0,
+      blastRadius: isBomb ? 160 : 0,
+      hasDetonated: false,
+      fuseSoundTimer: 0.1,
       // Living animation state
       blinkTimer: Math.random() * 3 + 2,
       isBlinking: false,
@@ -70,6 +78,10 @@ export class PhysicsWorld {
 
     this.mushrooms.push(mushroom);
     return mushroom;
+  }
+
+  addBomb(x, y, bombData) {
+    return this.addMushroom(x, y, bombData, true);
   }
 
   removeMushroom(id) {
@@ -325,8 +337,80 @@ export class PhysicsWorld {
     }
 
     // 4. Update scale, sleeping state, and stability
+    // 4. Bomb fuse countdown & detonation processing (3 seconds after drop)
+    const detonations = [];
     for (let i = 0; i < this.mushrooms.length; i++) {
       const m = this.mushrooms[i];
+      if (!m.isBomb) continue;
+
+      m.fuseTimer -= dt;
+      m.isSleeping = false;
+      m.sleepTimer = 0;
+
+      // Sizzling / ticking fuse audio trigger
+      m.fuseSoundTimer = (m.fuseSoundTimer || 0) - dt;
+      if (m.fuseSoundTimer <= 0 && m.fuseTimer > 0) {
+        // Ticks faster as fuse burns down
+        const tickRate = Math.max(0.08, m.fuseTimer * 0.12);
+        m.fuseSoundTimer = tickRate;
+        if (onBounce && typeof onBounce === 'function') {
+          // Send fuse tick event
+          onBounce('fuse_tick', 3.0 - m.fuseTimer);
+        }
+      }
+
+      // Visual pulse as fuse burns down (vibrates faster towards 0s)
+      if (m.fuseTimer > 0) {
+        const elapsed = 3.0 - m.fuseTimer;
+        const freq = 6 + elapsed * 8;
+        m.scale = 1.0 + 0.07 * Math.sin(elapsed * freq);
+      }
+
+      // Detonation at 3 seconds!
+      if (m.fuseTimer <= 0 && !m.hasDetonated) {
+        m.hasDetonated = true;
+        m.isMerging = true;
+
+        const blastedBodies = [];
+        for (const other of this.mushrooms) {
+          if (other.id === m.id || other.isMerging) continue;
+          const dist = Math.hypot(other.x - m.x, other.y - m.y);
+          // Destroy all plushies within blast radius around the bomb!
+          if (dist <= m.blastRadius + other.radius * 0.4) {
+            other.isMerging = true;
+            blastedBodies.push(other);
+          } else if (dist <= m.blastRadius + 140) {
+            // Outward shockwave physical push for nearby survivors
+            const angle = Math.atan2(other.y - m.y, other.x - m.x);
+            const force = (1.0 - (dist - m.blastRadius) / 140) * 12.0;
+            other.vx += Math.cos(angle) * force;
+            other.vy += Math.sin(angle) * force - 3.8;
+            other.isSleeping = false;
+            other.sleepTimer = 0;
+          }
+        }
+
+        detonations.push({
+          bomb: m,
+          x: m.x,
+          y: m.y,
+          blastRadius: m.blastRadius,
+          blastedBodies
+        });
+      }
+    }
+
+    // Remove detonated bombs
+    for (let i = this.mushrooms.length - 1; i >= 0; i--) {
+      if (this.mushrooms[i].isBomb && this.mushrooms[i].hasDetonated) {
+        this.mushrooms.splice(i, 1);
+      }
+    }
+
+    // 5. Update scale, sleeping state, and stability
+    for (let i = 0; i < this.mushrooms.length; i++) {
+      const m = this.mushrooms[i];
+      if (m.isBomb) continue; // Bombs never sleep while fuse burns
 
       // Spawn scale animation on merge
       if (m.scale < m.targetScale) {
@@ -386,6 +470,7 @@ export class PhysicsWorld {
       m.wobble = 0;
     }
 
+    merges.detonations = detonations;
     return merges;
   }
 

@@ -1,7 +1,7 @@
-import { MUSHROOM_TIERS, getRandomDropTier } from './mushroom-data.js?v=20261026_radialshape';
+import { MUSHROOM_TIERS, BOMB_ITEM, getRandomDropTier } from './mushroom-data.js?v=20261027_plushies';
 import { sound } from './audio.js';
-import { PhysicsWorld, getCreatureRadiusAtAngle } from './physics.js?v=20261026_radialshape';
-import { TerrariumRenderer } from './renderer.js?v=20261026_radialshape';
+import { PhysicsWorld, getCreatureRadiusAtAngle } from './physics.js?v=20261027_plushies';
+import { TerrariumRenderer } from './renderer.js?v=20261027_plushies';
 
 export class GameManager {
   constructor() {
@@ -178,13 +178,32 @@ export class GameManager {
 
     // Mobile tactile haptic pulse
     if (typeof navigator !== 'undefined' && navigator.vibrate) {
-      try { navigator.vibrate(10); } catch (_) {}
+      try { navigator.vibrate(15); } catch (_) {}
     }
 
     // Wake up any sleeping creatures in the drop trajectory so they react naturally
     this.world.wakeColumn(this.dropX, 160);
 
-    // Spawn pastry into the physics world
+    // Check if dropping a Timed Spark Bomb (3s countdown)
+    if (this.currentTierData.isBomb || this.currentTierData.id === 'plush_bomb' || this.currentTierData.tier === 99) {
+      this.clampDropX();
+      this.world.addBomb(this.dropX, 90 + BOMB_ITEM.radius, BOMB_ITEM);
+      this.renderer.addPopup(this.dropX, 90 + BOMB_ITEM.radius, '💣 3s Fuse Lit!');
+
+      this.canDrop = false;
+      this.dropCooldownTimer = this.dropCooldownDuration;
+
+      // Cycle next piece through queue
+      this.nextQueue.shift();
+      this.nextQueue.push(MUSHROOM_TIERS[getRandomDropTier() - 1]);
+      this.currentTierData = this.nextQueue[0];
+      this.nextTierData = this.nextQueue[1];
+      this.clampDropX();
+      this.updateNextPreviewUI();
+      return;
+    }
+
+    // Spawn normal plushie into the physics world
     const dummy = { radius: this.currentTierData.radius, tierData: this.currentTierData, angle: 0 };
     const ry = getCreatureRadiusAtAngle(dummy, Math.PI * 0.5);
     this.clampDropX();
@@ -262,6 +281,30 @@ export class GameManager {
       }
 
       this.updateStatsUI();
+    }
+  }
+
+  handleDetonations(detonations) {
+    for (const det of detonations) {
+      sound.playBombDetonation();
+      this.renderer.addBombBlast(det.x, det.y, det.blastRadius, det.blastedBodies.length);
+
+      let blastScore = 50;
+      for (const m of det.blastedBodies) {
+        this.world.removeMushroom(m.id);
+        const pts = (m.tierData ? m.tierData.points : 10) * 2;
+        blastScore += pts;
+        this.renderer.addFloatingScore(m.x, m.y, pts);
+      }
+
+      this.score += blastScore;
+      if (this.score > this.bestScore) {
+        this.bestScore = this.score;
+        this.saveStorage();
+      }
+      this.updateStatsUI();
+      this.updateEvolutionBar();
+      this.world.wakeNearby(det.x, det.y, det.blastRadius + 140);
     }
   }
 
@@ -521,16 +564,11 @@ export class GameManager {
     if (pwBomb) {
       pwBomb.addEventListener('click', () => {
         if (this.state !== 'PLAYING') return;
-        const popped = this.world.popSmallest();
-        if (popped) {
-          sound.playBomb();
-          this.renderer.addMergeBurst(popped.x, popped.y, popped.tierData);
-          this.renderer.addFloatingScore(popped.x, popped.y, popped.tierData.points);
-          this.renderer.addPopup(popped.x, popped.y, 'Popped!');
-          this.score += popped.tierData.points;
-          this.updateStatsUI();
-          this.updateEvolutionBar();
-        }
+        sound.playBombArm();
+        this.currentTierData = BOMB_ITEM;
+        this.clampDropX();
+        this.updateNextPreviewUI();
+        this.renderer.addPopup(this.dropX, 100, '💣 Bomb Ready! Drop it!');
       });
     }
 
@@ -1090,9 +1128,17 @@ export class GameManager {
       }
 
       // Update Physics
-      const merges = this.world.update(dt, (radius, velocity) => {
-        sound.playBounce(radius, velocity);
+      const merges = this.world.update(dt, (typeOrRadius, param2) => {
+        if (typeOrRadius === 'fuse_tick') {
+          sound.playFuseTick(1.0 + (param2 / 3.0) * 0.5);
+        } else {
+          sound.playBounce(typeOrRadius, param2);
+        }
       });
+
+      if (merges.detonations && merges.detonations.length > 0) {
+        this.handleDetonations(merges.detonations);
+      }
 
       if (merges.length > 0) {
         this.handleMerges(merges);

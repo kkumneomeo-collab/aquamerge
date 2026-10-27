@@ -1,38 +1,38 @@
 :root {
-  --bg-deep: #E0F2FE;
-  --bg-cream: #F0F9FF;
-  --bg-peach: #BAE6FD;
+  --bg-deep: #FEF3C7;
+  --bg-cream: #FFFBEB;
+  --bg-peach: #FDE68A;
   --bg-surface: rgba(255, 255, 255, 0.96);
-  --bg-glass: rgba(240, 249, 255, 0.92);
-  --border-glass: rgba(56, 189, 248, 0.45);
-  --border-light: rgba(186, 230, 253, 0.5);
+  --bg-glass: rgba(255, 251, 235, 0.94);
+  --border-glass: rgba(244, 63, 94, 0.35);
+  --border-light: rgba(251, 191, 36, 0.45);
 
-  --color-header-pill: #0369A1;
-  --color-header-border: #0284C7;
-  --color-header-shadow: #0C4A6E;
-  --color-cyan: #38BDF8;
-  --color-powerup: #0284C7;
-  --color-powerup-dark: #0369A1;
-  --color-powerup-shadow: #075985;
-  --color-powerup-border: #38BDF8;
-  --color-mint-track: #E0F7FA;
-  --color-mint-border: #7DD3FC;
-  --color-mint-shadow: #38BDF8;
+  --color-header-pill: #E11D48;
+  --color-header-border: #F43F5E;
+  --color-header-shadow: #881337;
+  --color-cyan: #FB7185;
+  --color-powerup: #F43F5E;
+  --color-powerup-dark: #BE185D;
+  --color-powerup-shadow: #881337;
+  --color-powerup-border: #FDA4AF;
+  --color-mint-track: #FFF1F2;
+  --color-mint-border: #FECDD3;
+  --color-mint-shadow: #FB7185;
 
-  --primary-amber: #0284C7;
-  --primary-hover: #0369A1;
-  --accent-gold: #38BDF8;
-  --accent-strawberry: #EF4444;
+  --primary-amber: #E11D48;
+  --primary-hover: #BE185D;
+  --accent-gold: #F59E0B;
+  --accent-strawberry: #F43F5E;
 
-  --text-main: #0F172A;
-  --text-muted: #0369A1;
-  --text-dim: #0284C7;
+  --text-main: #372A24;
+  --text-muted: #881337;
+  --text-dim: #9F1239;
 
   --font-display: 'Fredoka', cursive, sans-serif;
   --font-body: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
 
-  --shadow-lg: 0 16px 36px rgba(12, 74, 110, 0.16);
-  --shadow-glow: 0 0 20px rgba(56, 189, 248, 0.35);
+  --shadow-lg: 0 16px 36px rgba(136, 19, 55, 0.14);
+  --shadow-glow: 0 0 20px rgba(244, 63, 94, 0.32);
 }
 
 * {
@@ -59,16 +59,16 @@ body {
   justify-content: center;
 }
 
-/* Ambient Ocean Aquarium Backdrop */
+/* Ambient Cozy Plushie Toybox Backdrop */
 .forest-backdrop {
   position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: 0;
   overflow: hidden;
-  background: linear-gradient(180deg, #E0F2FE 0%, #BAE6FD 50%, #93C5FD 100%);
-  background-image: radial-gradient(circle at 50% 25%, rgba(255, 255, 255, 0.5) 0%, transparent 65%),
-                    linear-gradient(180deg, #E0F2FE 0%, #BAE6FD 55%, #7DD3FC 100%);
+  background: linear-gradient(180deg, #FFFBEB 0%, #FEF3C7 50%, #FDE68A 100%);
+  background-image: radial-gradient(circle at 50% 20%, rgba(255, 255, 255, 0.8) 0%, transparent 65%),
+                    linear-gradient(180deg, #FFFBEB 0%, #FEE2E2 55%, #FED7AA 100%);
 }
 
 .light-ray {
@@ -76,7 +76,7 @@ body {
   top: -100px;
   width: 280px;
   height: 1200px;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.35) 0%, rgba(224, 242, 254, 0.15) 60%, transparent 100%);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.45) 0%, rgba(254, 226, 226, 0.2) 60%, transparent 100%);
   transform: rotate(25deg);
   filter: blur(35px);
 }
@@ -155,8 +155,8 @@ body {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: linear-gradient(180deg, #0284C7 0%, #0369A1 100%);
-  border: 2px solid #38BDF8;
+  background: linear-gradient(180deg, #E11D48 0%, #BE185D 100%);
+  border: 2px solid #FDA4AF;
   color: #FFFFFF;
   font-family: var(--font-display);
   font-size: 1.6rem;
@@ -166,32 +166,32 @@ body {
   justify-content: center;
   cursor: pointer;
   transition: all 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
-  box-shadow: 0 4px 0 #0C4A6E, 0 6px 14px rgba(3, 105, 161, 0.3), inset 0 1.5px 1px rgba(255, 255, 255, 0.35);
+  box-shadow: 0 4px 0 #881337, 0 6px 14px rgba(225, 29, 72, 0.3), inset 0 1.5px 1px rgba(255, 255, 255, 0.35);
   flex-shrink: 0;
   line-height: 1;
 }
 
 .header-btn:hover {
   transform: translateY(-2px);
-  background: linear-gradient(180deg, #0EA5E9 0%, #0284C7 100%);
-  box-shadow: 0 6px 0 #0C4A6E, 0 8px 18px rgba(3, 105, 161, 0.38), inset 0 1.5px 1px rgba(255, 255, 255, 0.45);
+  background: linear-gradient(180deg, #F43F5E 0%, #E11D48 100%);
+  box-shadow: 0 6px 0 #881337, 0 8px 18px rgba(225, 29, 72, 0.38), inset 0 1.5px 1px rgba(255, 255, 255, 0.45);
 }
 
 .header-btn:active {
   transform: translateY(3px);
-  box-shadow: 0 1px 0 #0C4A6E, 0 2px 6px rgba(3, 105, 161, 0.25);
+  box-shadow: 0 1px 0 #881337, 0 2px 6px rgba(225, 29, 72, 0.25);
 }
 
 /* Center Score Capsule Pill */
 .header-score-pill {
-  background: linear-gradient(180deg, #075985 0%, #0C4A6E 100%);
-  border: 2px solid #0284C7;
+  background: linear-gradient(180deg, #881337 0%, #4C0519 100%);
+  border: 2px solid #F43F5E;
   border-radius: 999px;
   display: flex;
   align-items: center;
   padding: 4px 20px;
   gap: 16px;
-  box-shadow: 0 4px 0 #082F49, 0 6px 16px rgba(12, 74, 110, 0.32), inset 0 1.5px 1px rgba(255, 255, 255, 0.25);
+  box-shadow: 0 4px 0 #4C0519, 0 6px 16px rgba(76, 5, 25, 0.32), inset 0 1.5px 1px rgba(255, 255, 255, 0.25);
 }
 
 .score-subpill {
@@ -204,7 +204,7 @@ body {
   font-size: 0.58rem;
   letter-spacing: 0.08em;
   font-weight: 800;
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .score-num {
@@ -219,16 +219,16 @@ body {
 .score-div {
   width: 1.5px;
   height: 26px;
-  background: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.25);
 }
 
 .alltime-lbl {
-  color: var(--color-cyan);
+  color: #FDE047;
 }
 
 .alltime-num {
-  color: var(--color-cyan);
-  text-shadow: 0 0 8px rgba(84, 217, 226, 0.45);
+  color: #FDE047;
+  text-shadow: 0 0 8px rgba(253, 224, 71, 0.5);
 }
 
 /* Action / Sub-Bar: Power-ups & Next Queue */

@@ -473,28 +473,100 @@ class SoundEngine {
   }
 
   /**
-   * SFX: Bomb / Pop Power-up
+   * SFX: Bomb Arming Chime
    */
-  playBomb() {
+  playBombArm() {
+    this.ensureContext();
+    if (!this.ctx || this.isMuted) return;
+    const now = this.ctx.currentTime;
+    [440, 660, 880].forEach((freq, idx) => {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now + idx * 0.06);
+      gain.gain.setValueAtTime(0.2, now + idx * 0.06);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.06 + 0.12);
+      osc.connect(gain);
+      gain.connect(this.sfxGain);
+      osc.start(now + idx * 0.06);
+      osc.stop(now + idx * 0.06 + 0.15);
+    });
+  }
+
+  /**
+   * SFX: Fuse Ticking / Sizzling
+   */
+  playFuseTick(pitch = 1.0) {
+    this.ensureContext();
+    if (!this.ctx || this.isMuted) return;
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(800 * pitch, now);
+    osc.frequency.exponentialRampToValueAtTime(1400 * pitch, now + 0.04);
+    gain.gain.setValueAtTime(0.18, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+    osc.connect(gain);
+    gain.connect(this.sfxGain);
+    osc.start(now);
+    osc.stop(now + 0.06);
+  }
+
+  /**
+   * SFX: Bomb Detonation Blast
+   */
+  playBombDetonation() {
     this.ensureContext();
     if (!this.ctx || this.isMuted) return;
     const now = this.ctx.currentTime;
 
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
+    // 1. Deep Sub-Bass Impact Boom
+    const subOsc = this.ctx.createOscillator();
+    const subGain = this.ctx.createGain();
+    subOsc.type = 'sine';
+    subOsc.frequency.setValueAtTime(180, now);
+    subOsc.frequency.exponentialRampToValueAtTime(32, now + 0.45);
+    subGain.gain.setValueAtTime(0.85, now);
+    subGain.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
+    subOsc.connect(subGain);
+    subGain.connect(this.sfxGain);
+    subOsc.start(now);
+    subOsc.stop(now + 0.6);
 
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(320, now);
-    osc.frequency.exponentialRampToValueAtTime(80, now + 0.18);
+    // 2. Punchy Mid Body
+    const midOsc = this.ctx.createOscillator();
+    const midGain = this.ctx.createGain();
+    midOsc.type = 'triangle';
+    midOsc.frequency.setValueAtTime(260, now);
+    midOsc.frequency.exponentialRampToValueAtTime(65, now + 0.28);
+    midGain.gain.setValueAtTime(0.6, now);
+    midGain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+    midOsc.connect(midGain);
+    midGain.connect(this.sfxGain);
+    midOsc.start(now);
+    midOsc.stop(now + 0.4);
 
-    gain.gain.setValueAtTime(0.35, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+    // 3. Sparkling Celebration Chime Overlay
+    [587.33, 739.99, 880, 1174.66].forEach((f, idx) => {
+      const chimeOsc = this.ctx.createOscillator();
+      const chimeGain = this.ctx.createGain();
+      chimeOsc.type = 'sine';
+      chimeOsc.frequency.setValueAtTime(f, now + 0.05 + idx * 0.04);
+      chimeGain.gain.setValueAtTime(0.25, now + 0.05 + idx * 0.04);
+      chimeGain.gain.exponentialRampToValueAtTime(0.001, now + 0.45 + idx * 0.04);
+      chimeOsc.connect(chimeGain);
+      chimeGain.connect(this.sfxGain);
+      chimeOsc.start(now + 0.05 + idx * 0.04);
+      chimeOsc.stop(now + 0.5 + idx * 0.04);
+    });
+  }
 
-    osc.connect(gain);
-    gain.connect(this.sfxGain);
-
-    osc.start(now);
-    osc.stop(now + 0.25);
+  /**
+   * SFX: Bomb / Pop Power-up
+   */
+  playBomb() {
+    this.playBombArm();
   }
 }
 

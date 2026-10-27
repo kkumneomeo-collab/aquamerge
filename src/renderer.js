@@ -1,9 +1,9 @@
-import { MUSHROOM_TIERS } from './mushroom-data.js?v=20261026_ocean';
+import { MUSHROOM_TIERS, BOMB_ITEM } from './mushroom-data.js?v=20261027_plushies';
 
 /**
- * Canvas Renderer for Cozy Ocean Aquarium Merge Puzzle
- * Handles Transparent 3D Acrylic Tank, Animated Sea Creatures with Eye Blinking,
- * Rising Bubble Effects, Dotted Drop Beam, Floating Scores, and Aquatic FX.
+ * Canvas Renderer for Cozy Plushie Toybox Merge Puzzle
+ * Handles Transparent 3D Toybox Showcase, Animated Living Plushies with Eye Blinking,
+ * Timed Spark Bomb with 3s Countdown & Detonation Blast, Floating Scores, and Stitched FX.
  */
 export class TerrariumRenderer {
   constructor(canvas) {
@@ -12,11 +12,11 @@ export class TerrariumRenderer {
     this.particles = [];
     this.floatingScores = [];
     this.ambientSpores = [];
-    this.popups = []; // Animated comic popups ("Splash!", "Bloop!", "Delight!")
+    this.popups = []; // Animated comic popups ("Cozy!", "Cuddles!", "Plush Pop!")
     this.shakeTime = 0;
     this.shakeIntensity = 0;
 
-    // Preload sea creature character sprites (both open eyes and cute blinking eyes)
+    // Preload plushie character sprites (both open eyes and cute blinking eyes)
     this.animalImages = {};
     this.blinkImages = {};
     for (const tierData of MUSHROOM_TIERS) {
@@ -32,6 +32,12 @@ export class TerrariumRenderer {
       }
     }
 
+    // Preload Pink Felt Sparkle Bomb Sprite
+    this.bombImage = new Image();
+    this.bombImage.src = BOMB_ITEM.imageSrc;
+    this.animalImages[99] = this.bombImage;
+    this.animalImages['plush_bomb'] = this.bombImage;
+
     this.initAmbientSpores();
   }
 
@@ -42,16 +48,16 @@ export class TerrariumRenderer {
         x: Math.random() * 460,
         y: Math.random() * 720,
         vx: (Math.random() - 0.5) * 0.25,
-        vy: -0.35 - Math.random() * 0.55, // gentle rising water bubble
-        size: Math.random() * 4.0 + 2.0,
-        alpha: Math.random() * 0.45 + 0.3,
+        vy: -0.3 - Math.random() * 0.45, // gentle rising cotton fluff / fairy sparkle
+        size: Math.random() * 3.5 + 2.0,
+        alpha: Math.random() * 0.4 + 0.35,
         wobblePhase: Math.random() * Math.PI * 2
       });
     }
   }
 
   addPopup(x, y, customWord = null) {
-    const words = ['Bloop!', 'Splash!', 'Super!', 'Ocean Pop!', 'Delight!', 'Sparkle!'];
+    const words = ['Cozy!', 'So Soft!', 'Cuddles!', 'Plush Pop!', 'Sparkle!', 'Delight!'];
     const chosen = customWord || words[Math.floor(Math.random() * words.length)];
     this.popups.push({
       x,
@@ -71,9 +77,86 @@ export class TerrariumRenderer {
     this.shakeTime = duration;
   }
 
+  /**
+   * Detonation Visual FX for the 3-Second Timed Spark Bomb
+   */
+  addBombBlast(x, y, radius = 160, blastedCount = 0) {
+    // 1. Mighty Screen Shake!
+    this.triggerShake(15, 0.45);
+
+    // 2. Twin Expanding Shockwave Rings
+    this.particles.push({
+      type: 'shockwave',
+      x,
+      y,
+      radius: 12,
+      maxRadius: radius * 1.35,
+      growthSpeed: 440,
+      alpha: 1.0,
+      life: 0.55,
+      maxLife: 0.55,
+      color: '#F43F5E',
+      lineWidth: 8
+    });
+    this.particles.push({
+      type: 'shockwave',
+      x,
+      y,
+      radius: 6,
+      maxRadius: radius * 1.1,
+      growthSpeed: 360,
+      alpha: 1.0,
+      life: 0.45,
+      maxLife: 0.45,
+      color: '#FBBF24',
+      lineWidth: 5
+    });
+
+    // 3. Fluffy Cotton Cloud Puffs
+    for (let i = 0; i < 22; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = Math.random() * 5.5 + 2.0;
+      this.particles.push({
+        type: 'cotton',
+        x,
+        y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed - 1.5,
+        size: Math.random() * 18 + 12,
+        alpha: 0.9,
+        life: 0.65,
+        maxLife: 0.65,
+        color: i % 2 === 0 ? '#FFFFFF' : '#FECDD3'
+      });
+    }
+
+    // 4. Star & Heart Felt Confetti
+    const colors = ['#F43F5E', '#FBBF24', '#38BDF8', '#C084FC', '#34D399', '#FB7185'];
+    for (let i = 0; i < 36; i++) {
+      const angle = (Math.PI * 2 * i) / 36 + (Math.random() - 0.5) * 0.3;
+      const speed = Math.random() * 7.5 + 3.0;
+      this.particles.push({
+        type: 'sparkle_star',
+        x,
+        y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed - 2.5,
+        size: Math.random() * 7 + 4,
+        alpha: 1.0,
+        life: 0.75,
+        maxLife: 0.75,
+        color: colors[i % colors.length]
+      });
+    }
+
+    // 5. Giant Comic Popup
+    const text = blastedCount > 1 ? `KABOOM! ${blastedCount} POPPED!` : 'BOOM! BLAST!';
+    this.addPopup(x, y - 20, text);
+  }
+
   addMergeBurst(x, y, tierData) {
     const bubbleCount = 14 + tierData.tier * 2;
-    // 1. Animated rising bubbles!
+    // 1. Soft Cotton Puffs & Sparkles
     for (let i = 0; i < bubbleCount; i++) {
       const angle = (Math.PI * 2 * i) / bubbleCount + (Math.random() - 0.5) * 0.5;
       const speed = Math.random() * 3.5 + 1.2;
@@ -167,15 +250,28 @@ export class TerrariumRenderer {
       }
 
       p.alpha = Math.max(0, p.life / p.maxLife);
-      if (p.type === 'bubble') {
+      if (p.type === 'shockwave') {
+        p.radius += p.growthSpeed * dt;
+      } else if (p.type === 'cotton') {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vx *= 0.94;
+        p.vy *= 0.94;
+        p.size += 0.2;
+      } else if (p.type === 'sparkle_star') {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.12; // gravity
+        p.vx *= 0.96;
+      } else if (p.type === 'bubble') {
         p.x += p.vx + Math.sin(performance.now() * 0.007 + p.wobblePhase) * 0.6;
         p.y += p.vy;
-        p.vy -= 0.08; // upward buoyancy!
+        p.vy -= 0.08; // upward buoyancy
         p.size = Math.min(p.maxSize, p.size + 0.05);
       } else if (p.type === 'spore' || p.type === 'star') {
         p.x += p.vx;
         p.y += p.vy;
-        p.vy += 0.08; // slight gravity on particles
+        p.vy += 0.08; // slight gravity
       } else if (p.type === 'ring') {
         const progress = 1 - (p.life / p.maxLife);
         p.radius += (p.targetRadius - p.radius) * 0.18;
@@ -327,28 +423,28 @@ export class TerrariumRenderer {
     ctx.closePath();
     ctx.clip();
 
-    // Ocean interior water gradient (Light blue to aqua deep)
+    // Plushie toybox interior velvet gradient (Warm honey cream to soft vanilla amber)
     const bgGrad = ctx.createLinearGradient(0, top, 0, bottom);
     if (dangerRatio > 0.3) {
-      // Warm alert tint over blue
-      bgGrad.addColorStop(0, '#E0F2FE');
+      // Warm alert tint over cream
+      bgGrad.addColorStop(0, '#FFF1F2');
       bgGrad.addColorStop(0.5, '#FEE2E2');
-      bgGrad.addColorStop(1, '#FECACA');
+      bgGrad.addColorStop(1, '#FECDD3');
     } else {
-      bgGrad.addColorStop(0, '#F0F9FF');
-      bgGrad.addColorStop(0.3, '#E0F2FE');
-      bgGrad.addColorStop(0.7, '#BAE6FD');
-      bgGrad.addColorStop(1, '#7DD3FC');
+      bgGrad.addColorStop(0, '#FFFDF8');
+      bgGrad.addColorStop(0.35, '#FEF9C3');
+      bgGrad.addColorStop(0.75, '#FEF08A');
+      bgGrad.addColorStop(1, '#FDE68A');
     }
     ctx.fillStyle = bgGrad;
     ctx.fill();
 
-    // Underwater sunlight caustics / sunbeams filtering through light blue water
+    // Warm golden sunlight rays filtering into the toybox
     ctx.save();
-    ctx.globalAlpha = 0.18;
+    ctx.globalAlpha = 0.22;
     const beamGrad = ctx.createLinearGradient(left, top, right, bottom);
     beamGrad.addColorStop(0, '#FFFFFF');
-    beamGrad.addColorStop(0.4, '#E0F2FE');
+    beamGrad.addColorStop(0.4, '#FEF08A');
     beamGrad.addColorStop(1, 'transparent');
     ctx.fillStyle = beamGrad;
     ctx.beginPath();
@@ -360,24 +456,26 @@ export class TerrariumRenderer {
     ctx.fill();
     ctx.restore();
 
-    // White/Golden coral sand shelf at the aquarium floor
-    const floorH = 16;
+    // Cozy stitched felt cushion bed at the toybox floor
+    const floorH = 18;
     const floorY = bottom - floorH;
     const floorGrad = ctx.createLinearGradient(0, floorY, 0, bottom);
-    floorGrad.addColorStop(0, 'rgba(254, 243, 199, 0.65)');
-    floorGrad.addColorStop(0.4, 'rgba(253, 230, 138, 0.75)');
-    floorGrad.addColorStop(1, 'rgba(245, 158, 11, 0.5)');
+    floorGrad.addColorStop(0, '#FBBF24');
+    floorGrad.addColorStop(0.5, '#F59E0B');
+    floorGrad.addColorStop(1, '#D97706');
     ctx.fillStyle = floorGrad;
     ctx.fillRect(left, floorY, w, floorH);
 
-    // Subtle sand ripple texture
-    ctx.strokeStyle = 'rgba(217, 119, 6, 0.25)';
-    ctx.lineWidth = 1;
-    for (let rx = left + 10; rx < right - 10; rx += 36) {
-      ctx.beginPath();
-      ctx.arc(rx, floorY + 4, 12, 0, Math.PI);
-      ctx.stroke();
-    }
+    // Stitched quilted embroidery line across cushion
+    ctx.save();
+    ctx.strokeStyle = '#FEF3C7';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 6]);
+    ctx.beginPath();
+    ctx.moveTo(left + 8, floorY + 6);
+    ctx.lineTo(right - 8, floorY + 6);
+    ctx.stroke();
+    ctx.restore();
 
     ctx.restore();
   }
@@ -387,27 +485,18 @@ export class TerrariumRenderer {
     for (const s of this.ambientSpores) {
       if (s.x >= bounds.left - 20 && s.x <= bounds.right + 20 && s.y >= bounds.top - 40 && s.y <= bounds.bottom) {
         ctx.save();
-        ctx.globalAlpha = s.alpha;
+        ctx.globalAlpha = s.alpha * 0.75;
         ctx.translate(s.x, s.y);
 
-        // Translucent bubble gradient
-        const grad = ctx.createRadialGradient(-s.size * 0.3, -s.size * 0.3, s.size * 0.1, 0, 0, s.size);
-        grad.addColorStop(0, 'rgba(255, 255, 255, 0.75)');
-        grad.addColorStop(0.5, 'rgba(186, 230, 253, 0.4)');
-        grad.addColorStop(1, 'rgba(56, 189, 248, 0.65)');
+        // Soft floating cotton fluff & fairy sparkle
+        const grad = ctx.createRadialGradient(-s.size * 0.2, -s.size * 0.2, s.size * 0.1, 0, 0, s.size);
+        grad.addColorStop(0, '#FFFFFF');
+        grad.addColorStop(0.5, 'rgba(254, 240, 138, 0.65)');
+        grad.addColorStop(1, 'rgba(244, 63, 94, 0.25)');
 
         ctx.fillStyle = grad;
         ctx.beginPath();
         ctx.arc(0, 0, s.size, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
-        ctx.lineWidth = 0.8;
-        ctx.stroke();
-
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-        ctx.beginPath();
-        ctx.arc(-s.size * 0.35, -s.size * 0.35, s.size * 0.25, 0, Math.PI * 2);
         ctx.fill();
 
         ctx.restore();
@@ -419,10 +508,10 @@ export class TerrariumRenderer {
   renderAimingGuide(ctx, dropX, heldMushroom, landingY, bounds, dangerLineY) {
     ctx.save();
 
-    // 1. Dotted vertical drop beam with circular dots (electric turquoise cyan)
+    // 1. Dotted vertical drop beam with circular dots (strawberry rose)
     const dotSpacing = 16;
     const dotRadius = 3.5;
-    const dotColor = '#0284C7';
+    const dotColor = '#F43F5E';
 
     ctx.fillStyle = dotColor;
     for (let y = 82; y < landingY - 6; y += dotSpacing) {
@@ -438,7 +527,9 @@ export class TerrariumRenderer {
     const data = heldMushroom;
     const r = data.radius;
     let img = null;
-    if (this.animalImages && this.animalImages[data.tier] && this.animalImages[data.tier].complete && this.animalImages[data.tier].naturalWidth > 0) {
+    if (data.isBomb || data.id === 'plush_bomb' || data.tier === 99) {
+      img = this.bombImage;
+    } else if (this.animalImages && this.animalImages[data.tier] && this.animalImages[data.tier].complete && this.animalImages[data.tier].naturalWidth > 0) {
       img = this.animalImages[data.tier];
     }
 
@@ -471,7 +562,7 @@ export class TerrariumRenderer {
     // Ghost landing center anchor point
     ctx.beginPath();
     ctx.arc(0, 0, 3.5, 0, Math.PI * 2);
-    ctx.fillStyle = '#38BDF8';
+    ctx.fillStyle = '#F43F5E';
     ctx.globalAlpha = 0.85;
     ctx.fill();
     ctx.restore();
@@ -489,13 +580,13 @@ export class TerrariumRenderer {
     const depthX = 22;
     const depthY = 28;
 
-    // 1. 3D Rear Wall Back Corner Lines (subtle aquatic depth)
+    // 1. 3D Rear Wall Back Corner Lines (warm toybox depth)
     ctx.beginPath();
     ctx.moveTo(left + depthX, top - depthY);
     ctx.lineTo(left + depthX, bottom - 12);
     ctx.moveTo(right - depthX, top - depthY);
     ctx.lineTo(right - depthX, bottom - 12);
-    ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
+    ctx.strokeStyle = 'rgba(245, 158, 11, 0.35)';
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
@@ -507,53 +598,53 @@ export class TerrariumRenderer {
     ctx.lineTo(right, top);
     ctx.closePath();
 
-    ctx.fillStyle = 'rgba(224, 242, 254, 0.3)';
+    ctx.fillStyle = 'rgba(254, 243, 199, 0.45)';
     ctx.fill();
-    ctx.strokeStyle = 'rgba(56, 189, 248, 0.7)';
+    ctx.strokeStyle = 'rgba(245, 158, 11, 0.65)';
     ctx.lineWidth = 2.5;
     ctx.stroke();
 
-    // 3. Front Acrylic Tank Outer Walls (clean straight vertical walls)
+    // 3. Front Acrylic Showcase Outer Walls
     ctx.beginPath();
     ctx.moveTo(left, top);
     ctx.lineTo(left, bottom);
     ctx.lineTo(right, bottom);
     ctx.lineTo(right, top);
 
-    ctx.strokeStyle = 'rgba(2, 132, 199, 0.65)';
+    ctx.strokeStyle = 'rgba(244, 63, 94, 0.45)';
     ctx.lineWidth = 3.5;
     ctx.stroke();
 
-    // 4. White Glass Edge Highlights (left and right)
+    // 4. Warm Edge Highlights (left and right)
     ctx.beginPath();
     ctx.moveTo(left + 4, top + 10);
     ctx.lineTo(left + 4, bottom - 4);
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.65)';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.75)';
     ctx.lineWidth = 2;
     ctx.stroke();
 
     ctx.beginPath();
     ctx.moveTo(right - 4, top + 15);
     ctx.lineTo(right - 4, bottom - 4);
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
-    // 5. Beveled Acrylic Base Stand
+    // 5. Warm Amber Toybox Base Stand
     const baseW = w + 16;
     const baseX = left - 8;
     const baseY = bottom;
     const baseH = 10;
 
     const baseGrad = ctx.createLinearGradient(0, baseY, 0, baseY + baseH);
-    baseGrad.addColorStop(0, 'rgba(186, 230, 253, 0.85)');
-    baseGrad.addColorStop(1, 'rgba(56, 189, 248, 0.95)');
+    baseGrad.addColorStop(0, '#FBBF24');
+    baseGrad.addColorStop(1, '#D97706');
     ctx.fillStyle = baseGrad;
 
     ctx.beginPath();
     ctx.roundRect(baseX, baseY, baseW, baseH, [0, 0, 6, 6]);
     ctx.fill();
-    ctx.strokeStyle = 'rgba(2, 132, 199, 0.65)';
+    ctx.strokeStyle = '#B45309';
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
@@ -621,11 +712,11 @@ export class TerrariumRenderer {
       ctx.fillText(`OVERFLOW: ${timeLeft}s`, (left + right) * 0.5, badgeY + badgeH * 0.5);
     } else {
       // Peaceful danger tag
-      ctx.fillStyle = 'rgba(2, 132, 199, 0.65)';
+      ctx.fillStyle = 'rgba(217, 119, 6, 0.75)';
       ctx.font = '9px Outfit, sans-serif';
       ctx.textAlign = 'left';
       ctx.textBaseline = 'bottom';
-      ctx.fillText('OCEAN SURFACE LIMIT', left + 10, dangerLineY - 4);
+      ctx.fillText('TOYBOX OVERFLOW LIMIT', left + 10, dangerLineY - 4);
     }
 
     ctx.restore();
@@ -652,7 +743,8 @@ export class TerrariumRenderer {
       lookY: 0.2,
       wobble: 0,
       id: 0,
-      isSleeping: false
+      isSleeping: false,
+      isBomb: !!(heldMushroom.isBomb || heldMushroom.tier === 99 || heldMushroom.id === 'plush_bomb')
     };
 
     ctx.save();
@@ -688,7 +780,90 @@ export class TerrariumRenderer {
 
     ctx.save();
 
-    // Select blinking sprite when isBlinking is true (so ONLY THE EYES BLINK!)
+    // Timed Spark Bomb rendering (3 seconds fuse timer)
+    if (m.isBomb || data.isBomb || data.tier === 99 || data.id === 'plush_bomb') {
+      const bombImg = this.bombImage;
+      if (bombImg && bombImg.complete && bombImg.naturalWidth > 0) {
+        const drawScale = (data.features && data.features.drawScale) || 2.22;
+        const dw = r * drawScale;
+        const dh = dw;
+        ctx.drawImage(bombImg, -dw / 2, -dh / 2, dw, dh);
+      } else {
+        ctx.fillStyle = '#F43F5E';
+        ctx.beginPath();
+        ctx.arc(0, 0, r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // 1. Animated Sparkling Star Fuse at top right of bomb
+      const fuseScale = (r * 2.22) / 512;
+      const fuseX = 134 * fuseScale;
+      const fuseY = -201 * fuseScale;
+      const now = performance.now() * 0.006;
+
+      ctx.save();
+      ctx.translate(fuseX, fuseY);
+
+      // Bright glowing spark aura
+      const auraGrad = ctx.createRadialGradient(0, 0, 1, 0, 0, 18);
+      auraGrad.addColorStop(0, 'rgba(254, 240, 138, 0.95)');
+      auraGrad.addColorStop(0.35, 'rgba(245, 158, 11, 0.75)');
+      auraGrad.addColorStop(1, 'rgba(239, 68, 68, 0)');
+      ctx.fillStyle = auraGrad;
+      ctx.beginPath();
+      ctx.arc(0, 0, 18, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Dynamic golden star spark rays
+      ctx.strokeStyle = '#FEF08A';
+      ctx.lineWidth = 2.2;
+      for (let s = 0; s < 6; s++) {
+        const a = (Math.PI * 2 * s) / 6 + now * 4.5;
+        const len = 7 + 6 * Math.sin(now * 8 + s * 2);
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(Math.cos(a) * len, Math.sin(a) * len);
+        ctx.stroke();
+      }
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.arc(0, 0, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      // 2. 3-Second Countdown Display Badge above the bomb!
+      if (m.fuseTimer !== undefined && m.fuseTimer > 0) {
+        ctx.save();
+        const secondsLeft = Math.max(0.1, m.fuseTimer);
+        const displaySec = Math.ceil(secondsLeft); // 3, 2, 1
+        const isUrgent = secondsLeft < 1.0;
+
+        ctx.translate(0, -r - 18);
+        const badgeColor = isUrgent ? '#EF4444' : '#F59E0B';
+        ctx.shadowColor = badgeColor;
+        ctx.shadowBlur = isUrgent ? 14 : 7;
+
+        ctx.fillStyle = badgeColor;
+        ctx.beginPath();
+        ctx.arc(0, 0, 14, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = '900 15px "Outfit", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(displaySec.toString(), 0, 1);
+        ctx.restore();
+      }
+
+      ctx.restore();
+      return;
+    }
     let img = null;
     if (m.isBlinking && this.blinkImages && this.blinkImages[data.tier] && this.blinkImages[data.tier].complete && this.blinkImages[data.tier].naturalWidth > 0) {
       img = this.blinkImages[data.tier];
@@ -1147,6 +1322,24 @@ export class TerrariumRenderer {
         ctx.fill();
 
         ctx.restore();
+      } else if (p.type === 'shockwave') {
+        ctx.strokeStyle = p.color;
+        ctx.lineWidth = p.lineWidth || 6;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, Math.max(1, p.radius), 0, Math.PI * 2);
+        ctx.stroke();
+      } else if (p.type === 'cotton') {
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, Math.max(1, p.size), 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+        ctx.beginPath();
+        ctx.arc(p.x - p.size * 0.25, p.y - p.size * 0.25, p.size * 0.55, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (p.type === 'sparkle_star') {
+        ctx.fillStyle = p.color;
+        this.drawStar(ctx, p.x, p.y, p.size, p.size * 0.45);
       } else if (p.type === 'spore') {
         ctx.fillStyle = p.color;
         ctx.beginPath();

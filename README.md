@@ -1,42 +1,42 @@
-# AquaMerge: Cozy Ocean Aquarium 🌊
+# PlushMerge: Cozy Plushie Toybox 🧸✨
 
-A cozy, relaxing physics-based sea creature merge puzzle game built for mobile and desktop browsers. Drop, roll, and merge aquatic friends—from tiny nudibranchs to majestic orcas—inside a serene, light blue sunlit aquarium.
-
-![AquaMerge Preview](assets/seacreatures/tier2_orange_fish.png)
+A cozy, relaxing physics-based plush toy merge puzzle game built for mobile and desktop browsers. Drop, roll, and merge plushie friends—from tiny sweet strawberries to celestial axolotls—inside a warm honey-cream toybox showcase.
 
 ## ✨ Features
-- **Cozy Ocean Aesthetic**: Sunlit blue water gradient, soft coral sandbed, translucent ambient rising bubbles.
-- **10 Animated Sea Creature Tiers**:
-  1. 🌟 Nudibranch (Sea Slug)
-  2. 🐟 Chubby Goldfish
-  3. 🪸 Spiky Sea Urchin
-  4. 🦞 Sweet Lobster
-  5. 🐚 Spiral Nautilus
-  6. 🌊 Moray Eel
-  7. 🌸 Axolotl
-  8. 🦦 Sea Otter with Clam
-  9. 🦪 Giant Pearl Oyster
-  10. 🐋 Majestic Orca
-- **Living Character Eyes**: Sea creatures blink naturally with dedicated eye-state animation sprites.
-- **Accurate Custom 2D Physics**: Substep collision resolution with zero wall jitter, deterministic apex deflection, and stable resting sleep states.
-- **Juicy Merge FX**: Translucent rising bubbles with upward buoyancy and wobble, ripple rings, floating score counters, and combo celebration banners.
-- **Web Audio FX**: Synthesized water pops, bubble bloops, bounce thuds, and merge jingles with toggleable sound.
+- **Cozy Plushie Aesthetic**: Warm honey-cream velvet interior, stitched felt cushion bed, floating fairy sparkles and soft cotton fluff motes.
+- **10 Adorable Plushie Tiers**:
+  1. 🍓 **Sweet Berry Plushie** (*Fragaria Amabilis*)
+  2. 🐥 **Sunny Chick Plushie** (*Gallus Aurum*)
+  3. 🦇 **Fluffy Bat Plushie** (*Noctilio Vellere*)
+  4. 👾 **Cosmic Pip Alien Plushie** (*Trioculus Astra*)
+  5. 🐧 **Scarfie Penguin Plushie** (*Spheniscus Calidus*)
+  6. 🐰 **Moonlight Lop Bunny Plushie** (*Oryctolagus Lunaris*)
+  7. 🦋 **Dreamy Flutter Butterfly Plushie** (*Papilio Somnia*)
+  8. 🦁 **Golden Lion Plushie** (*Leo Nobilis*)
+  9. 🐲 **Baby Sky Drake Plushie** (*Draco Caeruleus*)
+  10. 🌸 **Celestial Axolotl Plushie** (*Ambystoma Divina*)
+- **💣 3-Second Timed Plushie Star Bomb**:
+  - Arm the dropper with the Pink Felt Sparkle Bomb.
+  - Features an animated golden star spark fuse.
+  - Drops into the toybox and starts an exact **3.0-second countdown badge** (`3`, `2`, `1`).
+  - At 3 seconds, detonates with a massive shockwave, clearing all plushies within its 160px blast radius, physically tossing nearby survivors with outward shockwave force, and awarding double bonus points!
+  - Accompanied by expanding shockwave rings, cotton fluff bursts, star confetti, comic popups, and deep sub-bass blast audio.
+- **Living Character Eyes**: Plushies blink naturally with dedicated sleeping/embroidered blink animation sprites.
+- **Accurate 360° Radial Physics**: Substep collision resolution with zero overlap and zero excessive gaps using exact contour profiles.
+- **Web Audio FX**: Synthesized cotton squeaks, fuse sizzles, bounce thuds, merge chords, and boom blasts with toggleable sound.
 - **Cozy Power-Ups**:
-  - 📳 **Water Stir (Shake)**: Gently swirl and settle pieces.
-  - 🫧 **Bubble Pop**: Remove the smallest creature to relieve pressure.
+  - 📳 **Toybox Shake**: Gently settle and rearrange plushies.
+  - 💣 **Plushie Star Bomb**: 3-second timed blast clearing the target area.
 
 ## 🚀 How to Run Locally
 No build step or dependencies required! Simply serve the directory with any static file server:
 
 ```bash
 # Using python
-python3 -m http.server 8000
-
-# Or using npx serve
-npx serve .
+python3 -m http.server 8765
 ```
 
-Then open `http://localhost:8000` (or `http://localhost:3000`) in your browser.
+Then open `http://localhost:8765` in your browser.
 
 ## 📱 Mobile Friendly
 Optimized for mobile touchscreens, PWA installable with manifest support, and responsive scaling.
