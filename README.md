@@ -1,6 +1,14 @@
 # PlushMerge: Cozy Plushie Toybox 🧸✨
 
+[![GitHub Release](https://img.shields.io/github/v/release/kkumneomeo-collab/aquamerge?color=ff69b4&label=Latest%20Release)](https://github.com/kkumneomeo-collab/aquamerge/releases/latest)
+[![Download Android APK](https://img.shields.io/badge/Download-Android%20APK%20(8.8MB)-22c55e?logo=android&logoColor=white)](https://github.com/kkumneomeo-collab/aquamerge/releases/download/v1.0.0/PlushMerge-v1.0.apk)
+
 A cozy, relaxing physics-based plush toy merge puzzle game built for mobile and desktop browsers. Drop, roll, and merge plushie friends—from tiny sweet strawberries to celestial axolotls—inside a warm honey-cream toybox showcase.
+
+### 📥 Direct Downloads
+- **Direct APK Download**: [PlushMerge-v1.0.apk (8.8 MB)](https://github.com/kkumneomeo-collab/aquamerge/releases/download/v1.0.0/PlushMerge-v1.0.apk)
+- **GitHub Release Page**: [v1.0.0 Release](https://github.com/kkumneomeo-collab/aquamerge/releases/tag/v1.0.0)
+- **Repository Raw File**: [release/PlushMerge-v1.0.apk](https://github.com/kkumneomeo-collab/aquamerge/raw/main/release/PlushMerge-v1.0.apk)
 
 ## ✨ Features
 - **Clean Plain Pastel Pink Aesthetic**: Soft pastel pink velvet interior (`#FFF5F7` / `#FDF2F8`), felt cushion floor, and minimalist distraction-free backdrop.
