@@ -1,0 +1,30 @@
+{
+  "name": "plushmerge",
+  "version": "1.0.0",
+  "description": "PlushMerge: Cozy Plushie Toybox Merge Puzzle Game",
+  "main": "src/game.js",
+  "scripts": {
+    "start": "python3 -m http.server 8765",
+    "build": "mkdir -p www && cp -f index.html style.css manifest.json www/ && cp -Rf src assets www/",
+    "cap:sync": "npm run build && npx cap sync",
+    "cap:android": "npm run build && npx cap sync android",
+    "cap:ios": "npm run build && npx cap sync ios"
+  },
+  "keywords": [
+    "plushie",
+    "merge-game",
+    "suika",
+    "arcade",
+    "claw-machine",
+    "canvas",
+    "mobile-game"
+  ],
+  "author": "kkumneomeo-collab",
+  "license": "MIT",
+  "dependencies": {
+    "@capacitor/android": "^7.0.0",
+    "@capacitor/cli": "^7.0.0",
+    "@capacitor/core": "^7.0.0",
+    "@capacitor/ios": "^7.0.0"
+  }
+}

@@ -3,3 +3,19 @@
 node_modules/
 .vscode/
 .idea/
+www/
+
+# Android build intermediate caches
+android/.gradle/
+android/build/
+android/app/build/
+android/capacitor-android/build/
+android/capacitor-cordova-android-plugins/build/
+
+# Keep release APKs
+!release/
+!release/*.apk
+
+# iOS build intermediate caches
+ios/App/build/
+ios/App/DerivedData/

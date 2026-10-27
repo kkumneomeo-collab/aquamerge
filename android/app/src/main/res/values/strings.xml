@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">PlushMerge</string>
+    <string name="title_activity_main">PlushMerge</string>
+    <string name="package_name">com.cozytoybox.plushmerge</string>
+    <string name="custom_url_scheme">com.cozytoybox.plushmerge</string>
+</resources>
