@@ -241,14 +241,39 @@ export const BOMB_ITEM = {
 export const DROP_CANDIDATE_TIERS = [1, 2, 3, 4];
 export const DROP_WEIGHTS = [0.48, 0.34, 0.14, 0.04];
 
-export function getRandomDropTier() {
+/**
+ * Progressive Claw Machine Drop Selector:
+ * Only tiers that the player has achieved/unlocked can drop from the claw (capped at Tier 4 max).
+ * - Level 1 Start: Only Sweet Berry drops (100%).
+ * - Target Goal Achieved: Tier 2 (Sunny Chick) -> Berry (68%), Chick (32%).
+ * - Target Goal Achieved: Tier 3 (Fluffy Bat) -> Berry (54%), Chick (33%), Bat (13%).
+ * - Target Goal Achieved: Tier 4+ (Cosmic Pip) -> Full pool [1, 2, 3, 4] with weights [0.48, 0.34, 0.14, 0.04].
+ * Tiers 5-10 are always prestigious merge-only trophies so the toybox stays balanced and playable!
+ */
+export function getRandomDropTier(highestUnlockedTier = 1) {
+  const cap = Math.min(4, Math.max(1, highestUnlockedTier || 1));
+  let candidates, weights;
+  if (cap === 1) {
+    candidates = [1];
+    weights = [1.0];
+  } else if (cap === 2) {
+    candidates = [1, 2];
+    weights = [0.68, 0.32];
+  } else if (cap === 3) {
+    candidates = [1, 2, 3];
+    weights = [0.54, 0.33, 0.13];
+  } else {
+    candidates = [1, 2, 3, 4];
+    weights = [0.48, 0.34, 0.14, 0.04];
+  }
+
   const rand = Math.random();
   let cumulative = 0;
-  for (let i = 0; i < DROP_CANDIDATE_TIERS.length; i++) {
-    cumulative += DROP_WEIGHTS[i];
+  for (let i = 0; i < candidates.length; i++) {
+    cumulative += weights[i];
     if (rand <= cumulative) {
-      return DROP_CANDIDATE_TIERS[i];
+      return candidates[i];
     }
   }
-  return DROP_CANDIDATE_TIERS[0];
+  return candidates[0];
 }

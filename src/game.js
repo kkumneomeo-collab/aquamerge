@@ -1,7 +1,7 @@
-import { MUSHROOM_TIERS, BOMB_ITEM, getRandomDropTier } from './mushroom-data.js?v=20261027_noblink_v4';
+import { MUSHROOM_TIERS, BOMB_ITEM, getRandomDropTier } from './mushroom-data.js?v=20261027_progressive_v5';
 import { sound } from './audio.js';
-import { PhysicsWorld, getCreatureRadiusAtAngle } from './physics.js?v=20261027_noblink_v4';
-import { TerrariumRenderer } from './renderer.js?v=20261027_noblink_v4';
+import { PhysicsWorld, getCreatureRadiusAtAngle } from './physics.js?v=20261027_progressive_v5';
+import { TerrariumRenderer } from './renderer.js?v=20261027_progressive_v5';
 
 export class GameManager {
   constructor() {
@@ -29,10 +29,10 @@ export class GameManager {
     // Dropper queue state (shows horizontal line of next pastries)
     this.dropX = 230;
     this.nextQueue = [
-      MUSHROOM_TIERS[getRandomDropTier() - 1],
-      MUSHROOM_TIERS[getRandomDropTier() - 1],
-      MUSHROOM_TIERS[getRandomDropTier() - 1],
-      MUSHROOM_TIERS[getRandomDropTier() - 1]
+      MUSHROOM_TIERS[getRandomDropTier(this.highestTier) - 1],
+      MUSHROOM_TIERS[getRandomDropTier(this.highestTier) - 1],
+      MUSHROOM_TIERS[getRandomDropTier(this.highestTier) - 1],
+      MUSHROOM_TIERS[getRandomDropTier(this.highestTier) - 1]
     ];
     this.currentTierData = this.nextQueue[0];
     this.nextTierData = this.nextQueue[1];
@@ -125,10 +125,10 @@ export class GameManager {
     this.world.clear();
 
     this.nextQueue = [
-      MUSHROOM_TIERS[getRandomDropTier() - 1],
-      MUSHROOM_TIERS[getRandomDropTier() - 1],
-      MUSHROOM_TIERS[getRandomDropTier() - 1],
-      MUSHROOM_TIERS[getRandomDropTier() - 1]
+      MUSHROOM_TIERS[getRandomDropTier(this.highestTier) - 1],
+      MUSHROOM_TIERS[getRandomDropTier(this.highestTier) - 1],
+      MUSHROOM_TIERS[getRandomDropTier(this.highestTier) - 1],
+      MUSHROOM_TIERS[getRandomDropTier(this.highestTier) - 1]
     ];
     this.currentTierData = this.nextQueue[0];
     this.nextTierData = this.nextQueue[1];
@@ -193,7 +193,7 @@ export class GameManager {
 
       // Cycle next piece through queue
       this.nextQueue.shift();
-      this.nextQueue.push(MUSHROOM_TIERS[getRandomDropTier() - 1]);
+      this.nextQueue.push(MUSHROOM_TIERS[getRandomDropTier(this.highestTier) - 1]);
       this.currentTierData = this.nextQueue[0];
       this.nextTierData = this.nextQueue[1];
       this.clampDropX();
@@ -212,7 +212,7 @@ export class GameManager {
 
     // Cycle next piece through queue
     this.nextQueue.shift();
-    this.nextQueue.push(MUSHROOM_TIERS[getRandomDropTier() - 1]);
+    this.nextQueue.push(MUSHROOM_TIERS[getRandomDropTier(this.highestTier) - 1]);
     this.currentTierData = this.nextQueue[0];
     this.nextTierData = this.nextQueue[1];
     this.clampDropX();
@@ -244,10 +244,16 @@ export class GameManager {
       }
 
       if (nextTierNum > this.highestTier) {
+        const prevHighest = this.highestTier;
         this.highestTier = nextTierNum;
         this.updateTargetTierUI();
         this.updateLadderUI();
         this.updateEvolutionBar();
+
+        // Celebratory notification when a new plushie enters the claw machine drop pool!
+        if (nextTierNum <= 4 && prevHighest < nextTierNum) {
+          this.renderer.addPopup(merge.x, Math.max(120, merge.y - 45), `⭐ ${nextTierData.name} Unlocked in Claw!`);
+        }
       }
 
       // Check Pastrydex new unlock

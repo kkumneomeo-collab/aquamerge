@@ -1,4 +1,4 @@
-import { MUSHROOM_TIERS, BOMB_ITEM } from './mushroom-data.js?v=20261027_noblink_v4';
+import { MUSHROOM_TIERS, BOMB_ITEM } from './mushroom-data.js?v=20261027_progressive_v5';
 
 /**
  * Canvas Renderer for Cozy Plushie Toybox Merge Puzzle
