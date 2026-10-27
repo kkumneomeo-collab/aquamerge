@@ -1,12 +1,23 @@
 # PlushMerge: Cozy Plushie Toybox 🧸✨
 
+[![Play Online in Browser](https://img.shields.io/badge/Play%20Online-Instant%20Web%20Game-ff4081?style=for-the-badge&logo=google-chrome&logoColor=white)](https://kkumneomeo-collab.github.io/aquamerge/)
+
 [![GitHub Release](https://img.shields.io/github/v/release/kkumneomeo-collab/aquamerge?color=ff69b4&label=Latest%20Release)](https://github.com/kkumneomeo-collab/aquamerge/releases/latest)
 [![Download Android APK](https://img.shields.io/badge/Download-Android%20APK%20(8.8MB)-22c55e?logo=android&logoColor=white)](https://github.com/kkumneomeo-collab/aquamerge/releases/download/v1.0.0/PlushMerge-v1.0.apk)
 [![Download iOS Project](https://img.shields.io/badge/Download-iOS%20Xcode%20Project%20(5.3MB)-007AFF?logo=apple&logoColor=white)](https://github.com/kkumneomeo-collab/aquamerge/releases/download/v1.0.0/PlushMerge-iOS-v1.0.zip)
 
 A cozy, relaxing physics-based plush toy merge puzzle game built for mobile and desktop browsers. Drop, roll, and merge plushie friends—from tiny sweet strawberries to celestial axolotls—inside a warm honey-cream toybox showcase.
 
-### 📥 Direct Downloads
+---
+
+### 🌐 Play in Your Browser (No Install Needed!)
+👉 **[Click Here to Play Online Now](https://kkumneomeo-collab.github.io/aquamerge/)**  
+*Direct Web URL: `https://kkumneomeo-collab.github.io/aquamerge/`*  
+*(Fully responsive: works instantly on Safari, Chrome, Firefox, Edge on mobile phones, tablets, and desktop computers!)*
+
+---
+
+### 📥 Direct Mobile Downloads
 - 🤖 **Android APK (8.8 MB)**: [PlushMerge-v1.0.apk](https://github.com/kkumneomeo-collab/aquamerge/releases/download/v1.0.0/PlushMerge-v1.0.apk)
 - 🍏 **iOS Xcode Project (5.3 MB)**: [PlushMerge-iOS-v1.0.zip](https://github.com/kkumneomeo-collab/aquamerge/releases/download/v1.0.0/PlushMerge-iOS-v1.0.zip)
 - 🏷️ **GitHub Release Page**: [v1.0.0 Release](https://github.com/kkumneomeo-collab/aquamerge/releases/tag/v1.0.0)
