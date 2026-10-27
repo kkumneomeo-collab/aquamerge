@@ -431,27 +431,47 @@ export class TerrariumRenderer {
       ctx.fill();
     }
 
-    // 2. Ghost preview ellipse at landing position matching creature dimensions
+    // 2. Ghost preview matching actual creature silhouette at landing position
     ctx.save();
     ctx.translate(dropX, landingY);
-    const feat = heldMushroom.features || {};
-    const rx = heldMushroom.radius * (feat.aspectX || 1.0);
-    const ry = heldMushroom.radius * (feat.aspectY || 1.0);
-    ctx.beginPath();
-    ctx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
-    ctx.fillStyle = heldMushroom.color;
-    ctx.globalAlpha = 0.22;
-    ctx.fill();
-    ctx.strokeStyle = '#0284C7';
-    ctx.lineWidth = 2;
-    ctx.setLineDash([4, 4]);
-    ctx.globalAlpha = 0.85;
-    ctx.stroke();
 
-    // Ghost center mark
+    const data = heldMushroom;
+    const r = data.radius;
+    let img = null;
+    if (this.animalImages && this.animalImages[data.tier] && this.animalImages[data.tier].complete && this.animalImages[data.tier].naturalWidth > 0) {
+      img = this.animalImages[data.tier];
+    }
+
+    if (img) {
+      const drawScale = (data.features && data.features.drawScale) || 2.12;
+      const aspect = img.naturalWidth / img.naturalHeight;
+      let dw, dh;
+      if (aspect >= 1) {
+        dw = r * drawScale;
+        dh = dw / aspect;
+      } else {
+        dh = r * drawScale;
+        dw = dh * aspect;
+      }
+      const ox = ((data.features && data.features.offsetX) || 0) * (r / 50);
+      const oy = ((data.features && data.features.offsetY) || 0) * (r / 50);
+
+      ctx.save();
+      ctx.globalAlpha = 0.38;
+      ctx.drawImage(img, -dw / 2 + ox, -dh / 2 + oy, dw, dh);
+      ctx.restore();
+    } else {
+      ctx.beginPath();
+      ctx.arc(0, 0, r, 0, Math.PI * 2);
+      ctx.fillStyle = heldMushroom.color;
+      ctx.globalAlpha = 0.22;
+      ctx.fill();
+    }
+
+    // Ghost landing center anchor point
     ctx.beginPath();
     ctx.arc(0, 0, 3.5, 0, Math.PI * 2);
-    ctx.fillStyle = '#FFF';
+    ctx.fillStyle = '#38BDF8';
     ctx.globalAlpha = 0.85;
     ctx.fill();
     ctx.restore();

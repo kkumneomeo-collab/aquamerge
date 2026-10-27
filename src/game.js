@@ -1,7 +1,7 @@
-import { MUSHROOM_TIERS, getRandomDropTier } from './mushroom-data.js?v=20261026_ocean';
+import { MUSHROOM_TIERS, getRandomDropTier } from './mushroom-data.js?v=20261026_radialshape';
 import { sound } from './audio.js';
-import { PhysicsWorld } from './physics.js';
-import { TerrariumRenderer } from './renderer.js';
+import { PhysicsWorld, getCreatureRadiusAtAngle } from './physics.js?v=20261026_radialshape';
+import { TerrariumRenderer } from './renderer.js?v=20261026_radialshape';
 
 export class GameManager {
   constructor() {
@@ -163,11 +163,11 @@ export class GameManager {
 
   clampDropX() {
     if (!this.currentTierData) return;
-    const r = this.currentTierData.radius;
-    const feat = this.currentTierData.features || {};
-    const rx = r * (feat.aspectX || 1.0);
-    const minX = this.bounds.left + rx + 2;
-    const maxX = this.bounds.right - rx - 2;
+    const dummy = { radius: this.currentTierData.radius, tierData: this.currentTierData, angle: 0 };
+    const rLeft = getCreatureRadiusAtAngle(dummy, Math.PI);
+    const rRight = getCreatureRadiusAtAngle(dummy, 0);
+    const minX = this.bounds.left + rLeft + 2;
+    const maxX = this.bounds.right - rRight - 2;
     this.dropX = Math.max(minX, Math.min(maxX, this.dropX));
   }
 
@@ -185,8 +185,8 @@ export class GameManager {
     this.world.wakeColumn(this.dropX, 160);
 
     // Spawn pastry into the physics world
-    const feat = this.currentTierData.features || {};
-    const ry = this.currentTierData.radius * (feat.aspectY || 1.0);
+    const dummy = { radius: this.currentTierData.radius, tierData: this.currentTierData, angle: 0 };
+    const ry = getCreatureRadiusAtAngle(dummy, Math.PI * 0.5);
     this.clampDropX();
     this.world.addMushroom(this.dropX, 90 + ry, this.currentTierData, true);
 
@@ -1110,9 +1110,8 @@ export class GameManager {
         // 3. Its downward velocity has settled (vy < 1.0 after 0.35s)
         const isLanded = age > 0.75 || m.isSleeping || (age > 0.35 && m.vy < 1.0);
 
-        const feat = (m.tierData && m.tierData.features) || {};
-        const ry = m.radius * (feat.aspectY || 1.0);
-        if (isLanded && (m.y - ry) < this.dangerLineY) {
+        const rUp = getCreatureRadiusAtAngle(m, -Math.PI * 0.5);
+        if (isLanded && (m.y - rUp) < this.dangerLineY) {
           isAnyAboveDanger = true;
           break;
         }

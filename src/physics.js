@@ -2,7 +2,26 @@
  * Custom 2D Circle Physics Engine for Mushroom Merge Terrarium
  * Tuned for solid downward gravity, zero edge sliding, instant settling,
  * and stable resting state (stays completely still until struck).
+/**
+ * Calculates the exact collision radius of a sea creature in direction `angle`.
+ * Uses the precomputed 36-sample boundary profile so creatures fit their actual
+ * shape on every side without unnatural empty gaps.
  */
+export function getCreatureRadiusAtAngle(m, angle) {
+  const profile = m.tierData && m.tierData.features && m.tierData.features.radialProfile;
+  if (!profile || profile.length === 0) return m.radius;
+  // Account for m.angle if tilted
+  const relAngle = angle - (m.angle || 0);
+  const TWO_PI = Math.PI * 2;
+  const normAngle = ((relAngle % TWO_PI) + TWO_PI) % TWO_PI;
+  const samplePos = (normAngle / TWO_PI) * profile.length;
+  const idx0 = Math.floor(samplePos) % profile.length;
+  const idx1 = (idx0 + 1) % profile.length;
+  const frac = samplePos - Math.floor(samplePos);
+  const ratio = profile[idx0] * (1 - frac) + profile[idx1] * frac;
+  return m.radius * ratio;
+}
+
 export class PhysicsWorld {
   constructor(bounds) {
     this.bounds = bounds; // { left, right, top, bottom }
@@ -134,26 +153,34 @@ export class PhysicsWorld {
           const b = this.mushrooms[j];
           if (b.isMerging) continue;
 
-          // Only skip if both are sleeping and NOT touching
-          if (a.isSleeping && b.isSleeping) {
-            const dx = b.x - a.x;
-            const dy = b.y - a.y;
-            const rSum = a.radius + b.radius;
-            if (dx * dx + dy * dy >= rSum * rSum) {
-              continue;
-            }
-          }
-
           let dx = b.x - a.x;
           let dy = b.y - a.y;
           let distSq = dx * dx + dy * dy;
+
+          // Fast broadphase bounding check
+          const maxRadiusSum = (a.radius + b.radius) * 1.15;
+          if (distSq >= maxRadiusSum * maxRadiusSum) {
+            continue;
+          }
+
           if (distSq < 0.00001) {
             dx = 0.001;
             dy = 0.001;
             distSq = dx * dx + dy * dy;
           }
           let dist = Math.sqrt(distSq);
-          const minDist = a.radius + b.radius;
+
+          // Exact angle-dependent contour radii from each creature's radial profile
+          const angleA = Math.atan2(dy, dx);
+          const angleB = Math.atan2(-dy, -dx);
+          const ra = getCreatureRadiusAtAngle(a, angleA);
+          const rb = getCreatureRadiusAtAngle(b, angleB);
+          const minDist = ra + rb;
+
+          // If both sleeping and not in contact, skip
+          if (a.isSleeping && b.isSleeping && dist >= minDist) {
+            continue;
+          }
 
           if (dist < minDist) {
             let nx = dx / dist;
@@ -170,9 +197,9 @@ export class PhysicsWorld {
               const { left, right } = this.bounds;
               let nudgeDir = 0;
               // If near the left wall, always nudge right (away from wall)
-              if (a.x - a.radius < left + 15 || b.x - b.radius < left + 15) {
+              if (a.x - ra < left + 15 || b.x - rb < left + 15) {
                 nudgeDir = 1.2;
-              } else if (a.x + a.radius > right - 15 || b.x + b.radius > right - 15) {
+              } else if (a.x + ra > right - 15 || b.x + rb > right - 15) {
                 // If near the right wall, always nudge left (away from wall)
                 nudgeDir = -1.2;
               } else {
@@ -226,14 +253,18 @@ export class PhysicsWorld {
             // Only smaller or similar-sized creatures roll off (never a giant otter off a tiny nudibranch!)
             if (!b.isSleeping && dy < -0.2 * minDist && b.radius <= a.radius * 1.25) {
               const slopeRoll = (dx / dist) * subGravity * 0.35;
-              if (!(slopeRoll < 0 && b.x - b.radius <= this.bounds.left + 2) &&
-                  !(slopeRoll > 0 && b.x + b.radius >= this.bounds.right - 2)) {
+              const bLeftR = getCreatureRadiusAtAngle(b, Math.PI);
+              const bRightR = getCreatureRadiusAtAngle(b, 0);
+              if (!(slopeRoll < 0 && b.x - bLeftR <= this.bounds.left + 2) &&
+                  !(slopeRoll > 0 && b.x + bRightR >= this.bounds.right - 2)) {
                 b.vx += slopeRoll;
               }
             } else if (!a.isSleeping && dy > 0.2 * minDist && a.radius <= b.radius * 1.25) {
               const slopeRoll = (-dx / dist) * subGravity * 0.35;
-              if (!(slopeRoll < 0 && a.x - a.radius <= this.bounds.left + 2) &&
-                  !(slopeRoll > 0 && a.x + a.radius >= this.bounds.right - 2)) {
+              const aLeftR = getCreatureRadiusAtAngle(a, Math.PI);
+              const aRightR = getCreatureRadiusAtAngle(a, 0);
+              if (!(slopeRoll < 0 && a.x - aLeftR <= this.bounds.left + 2) &&
+                  !(slopeRoll > 0 && a.x + aRightR >= this.bounds.right - 2)) {
                 a.vx += slopeRoll;
               }
             }
@@ -309,15 +340,15 @@ export class PhysicsWorld {
       m.squishX += (1.0 - m.squishX) * 0.35;
       m.squishY += (1.0 - m.squishY) * 0.35;
 
-      const feat = (m.tierData && m.tierData.features) || {};
-      const rx = m.radius * (feat.aspectX || 1.0);
-      const ry = m.radius * (feat.aspectY || 1.0);
+      const rDown = getCreatureRadiusAtAngle(m, Math.PI * 0.5);
+      const rLeft = getCreatureRadiusAtAngle(m, Math.PI);
+      const rRight = getCreatureRadiusAtAngle(m, 0);
 
       const speed = Math.hypot(m.vx, m.vy);
-      const isOnFloor = (m.y + ry) >= (this.bounds.bottom - 2.0);
+      const isOnFloor = (m.y + rDown) >= (this.bounds.bottom - 2.0);
 
       // Resting / Sleep detection:
-      // Floor items sleep in 0.10s. Stacked/crowded items require 0.25s of stable settling.
+      // Floor items sleep in 0.35s. Stacked/crowded items require 0.50s of stable settling.
       if (speed < 0.35 && Math.abs(m.angularVelocity) < 0.08) {
         m.sleepTimer += dt;
         m.settledTime += dt;
@@ -328,10 +359,10 @@ export class PhysicsWorld {
           m.vy = 0;
           m.angularVelocity = 0;
           m.angle = 0; // Lock perfectly upright!
-          // Clamp solidly to container bounds using exact aspect radii
-          if (m.x - rx < this.bounds.left) m.x = this.bounds.left + rx;
-          if (m.x + rx > this.bounds.right) m.x = this.bounds.right - rx;
-          if (m.y + ry > this.bounds.bottom) m.y = this.bounds.bottom - ry;
+          // Clamp solidly to container bounds using exact directional radii
+          if (m.x - rLeft < this.bounds.left) m.x = this.bounds.left + rLeft;
+          if (m.x + rRight > this.bounds.right) m.x = this.bounds.right - rRight;
+          if (m.y + rDown > this.bounds.bottom) m.y = this.bounds.bottom - rDown;
         }
       } else {
         m.sleepTimer = 0;
@@ -364,13 +395,13 @@ export class PhysicsWorld {
    */
   resolveWallCollision(m, onBounce, isFirstSubstep) {
     const { left, right, bottom } = this.bounds;
-    const feat = (m.tierData && m.tierData.features) || {};
-    const rx = m.radius * (feat.aspectX || 1.0);
-    const ry = m.radius * (feat.aspectY || 1.0);
+    const rDown = getCreatureRadiusAtAngle(m, Math.PI * 0.5);
+    const rLeft = getCreatureRadiusAtAngle(m, Math.PI);
+    const rRight = getCreatureRadiusAtAngle(m, 0);
 
     // Flat bottom floor - no floating gaps, sits directly on coral sand!
-    if (m.y + ry > bottom) {
-      m.y = bottom - ry;
+    if (m.y + rDown > bottom) {
+      m.y = bottom - rDown;
       if (m.vy > 0) {
         if (isFirstSubstep && m.vy > 2.2 && onBounce) {
           onBounce(m.radius, m.vy);
@@ -383,8 +414,8 @@ export class PhysicsWorld {
     }
 
     // Straight left vertical wall - stops creature precisely at outer edge with zero poking
-    if (m.x - rx < left) {
-      m.x = left + rx;
+    if (m.x - rLeft < left) {
+      m.x = left + rLeft;
       if (m.vx < 0) {
         m.vx = 0; // stop horizontal motion instantly against wall
       }
@@ -392,8 +423,8 @@ export class PhysicsWorld {
     }
 
     // Straight right vertical wall - stops creature precisely at outer edge with zero poking
-    if (m.x + rx > right) {
-      m.x = right - rx;
+    if (m.x + rRight > right) {
+      m.x = right - rRight;
       if (m.vx > 0) {
         m.vx = 0; // stop horizontal motion instantly against wall
       }
@@ -405,25 +436,35 @@ export class PhysicsWorld {
    * Raycast downwards from dropX to find the first landing contact
    */
   getLandingPreviewY(dropX, radius, tierData = null) {
-    const feat = (tierData && tierData.features) || {};
-    const heldAx = feat.aspectX || 1.0;
-    const heldAy = feat.aspectY || 1.0;
-    let landingY = this.bounds.bottom - radius * heldAy;
+    const dummyHeld = { radius, tierData, angle: 0 };
+    const heldBottomR = getCreatureRadiusAtAngle(dummyHeld, Math.PI * 0.5);
+    let landingY = this.bounds.bottom - heldBottomR;
 
     for (let i = 0; i < this.mushrooms.length; i++) {
       const m = this.mushrooms[i];
       if (m.isMerging) continue;
 
-      const mFeat = (m.tierData && m.tierData.features) || {};
-      const mAx = mFeat.aspectX || 1.0;
-      const mAy = mFeat.aspectY || 1.0;
+      const dx = dropX - m.x;
+      const maxCombinedR = radius * 1.15 + m.radius * 1.15;
+      if (Math.abs(dx) >= maxCombinedR) continue;
 
-      const dx = Math.abs(dropX - m.x);
-      const combinedR = radius + m.radius;
+      // Iteratively find contact dy using exact radial profiles
+      let dy = -Math.sqrt(Math.max(0, maxCombinedR * maxCombinedR - dx * dx));
+      for (let iter = 0; iter < 4; iter++) {
+        const angleM = Math.atan2(dy, dx);
+        const angleHeld = Math.atan2(-dy, -dx);
+        const rm = getCreatureRadiusAtAngle(m, angleM);
+        const rHeld = getCreatureRadiusAtAngle(dummyHeld, angleHeld);
+        const combinedR = rm + rHeld;
+        if (Math.abs(dx) >= combinedR) {
+          dy = 0;
+          break;
+        }
+        dy = -Math.sqrt(combinedR * combinedR - dx * dx);
+      }
 
-      if (dx < combinedR) {
-        const dy = Math.sqrt(combinedR * combinedR - dx * dx);
-        const contactY = m.y - dy;
+      if (dy < 0) {
+        const contactY = m.y + dy;
         if (contactY < landingY) {
           landingY = contactY;
         }
