@@ -28,7 +28,7 @@ export class PhysicsWorld {
     this.gravity = 0.72; // Solid, crisp downward gravity
     this.airResistance = 0.995;
     this.friction = 0.55; // Natural rolling over mushroom caps
-    this.restitution = 0.04; // Very low bounce - no bouncy ball effect
+    this.restitution = 0.36; // Bouncy plush toy bounce
     this.substeps = 10; // High precision for rock-solid stability
     this.mushrooms = [];
     this.nextId = 1;
@@ -286,8 +286,8 @@ export class PhysicsWorld {
             const rvy = b.vy - a.vy;
             const velAlongNormal = rvx * nx + rvy * ny;
 
-            if (velAlongNormal < -0.25) {
-              // Only apply restitution impulse if closing velocity is significant
+            if (velAlongNormal < -0.22) {
+              // Apply plushie restitution impulse
               const impulse = -(1 + this.restitution) * velAlongNormal / (1 / a.mass + 1 / b.mass);
               const ix = impulse * nx;
               const iy = impulse * ny;
@@ -296,6 +296,16 @@ export class PhysicsWorld {
               a.vy -= iy / a.mass;
               b.vx += ix / b.mass;
               b.vy += iy / b.mass;
+
+              // Soft plush squish & stretch on impact
+              const impact = Math.abs(velAlongNormal);
+              if (impact > 0.8) {
+                const squish = Math.min(0.24, impact * 0.038);
+                a.squishX = 1.0 + squish * Math.abs(ny);
+                a.squishY = 1.0 - squish * Math.abs(ny);
+                b.squishX = 1.0 + squish * Math.abs(ny);
+                b.squishY = 1.0 - squish * Math.abs(ny);
+              }
 
               // Moderate friction
               const tx = -ny;
@@ -312,7 +322,7 @@ export class PhysicsWorld {
 
               // Play soft thud sound on significant impact
               const impactSpeed = Math.abs(velAlongNormal);
-              if (onBounce && step === 0 && impactSpeed > 2.5) {
+              if (onBounce && step === 0 && impactSpeed > 2.0) {
                 onBounce((a.radius + b.radius) * 0.5, impactSpeed);
               }
             } else if (velAlongNormal < 0) {
@@ -420,9 +430,9 @@ export class PhysicsWorld {
         }
       }
 
-      // Fast decay of any residual squish
-      m.squishX += (1.0 - m.squishX) * 0.35;
-      m.squishY += (1.0 - m.squishY) * 0.35;
+      // Smooth spring recovery of plushie squish for bouncy stuffed-animal feel
+      m.squishX += (1.0 - m.squishX) * 0.22;
+      m.squishY += (1.0 - m.squishY) * 0.22;
 
       const rDown = getCreatureRadiusAtAngle(m, Math.PI * 0.5);
       const rLeft = getCreatureRadiusAtAngle(m, Math.PI);
@@ -432,11 +442,11 @@ export class PhysicsWorld {
       const isOnFloor = (m.y + rDown) >= (this.bounds.bottom - 2.0);
 
       // Resting / Sleep detection:
-      // Floor items sleep in 0.35s. Stacked/crowded items require 0.50s of stable settling.
+      // Floor items sleep in 0.40s. Stacked/crowded items require 0.55s of stable settling.
       if (speed < 0.35 && Math.abs(m.angularVelocity) < 0.08) {
         m.sleepTimer += dt;
         m.settledTime += dt;
-        const requiredSleepTime = isOnFloor ? 0.35 : 0.50;
+        const requiredSleepTime = isOnFloor ? 0.40 : 0.55;
         if (m.sleepTimer > requiredSleepTime) {
           m.isSleeping = true;
           m.vx = 0;
@@ -475,8 +485,7 @@ export class PhysicsWorld {
   }
 
   /**
-   * Straight Vertical Walls & Flat Bottom Floor:
-   * Edge drops fall straight down and stay exactly in place without drifting.
+   * Straight Vertical Walls & Flat Bottom Floor with Soft Plushie Bouncing
    */
   resolveWallCollision(m, onBounce, isFirstSubstep) {
     const { left, right, bottom } = this.bounds;
@@ -484,34 +493,52 @@ export class PhysicsWorld {
     const rLeft = getCreatureRadiusAtAngle(m, Math.PI);
     const rRight = getCreatureRadiusAtAngle(m, 0);
 
-    // Flat bottom floor - no floating gaps, sits directly on coral sand!
+    // Flat bottom floor - soft bouncy cushion impact
     if (m.y + rDown > bottom) {
       m.y = bottom - rDown;
       if (m.vy > 0) {
-        if (isFirstSubstep && m.vy > 2.2 && onBounce) {
+        if (isFirstSubstep && m.vy > 1.8 && onBounce) {
           onBounce(m.radius, m.vy);
         }
-        // Zero bounce on floor - solid thud!
-        m.vy = 0;
-        m.vx *= 0.7; // high ground friction
-        m.angularVelocity *= 0.7;
+        if (m.vy > 1.2) {
+          // Bouncy plushie bounce off padded floor cushion
+          m.vy = -m.vy * 0.36;
+          m.squishX = 1.0 + Math.min(0.26, Math.abs(m.vy) * 0.045);
+          m.squishY = 1.0 - Math.min(0.26, Math.abs(m.vy) * 0.045);
+        } else {
+          m.vy = 0;
+        }
+        m.vx *= 0.82;
+        m.angularVelocity *= 0.8;
       }
     }
 
-    // Straight left vertical wall - stops creature precisely at outer edge with zero poking
+    // Straight left vertical wall - soft spring bounce off wall
     if (m.x - rLeft < left) {
       m.x = left + rLeft;
       if (m.vx < 0) {
-        m.vx = 0; // stop horizontal motion instantly against wall
+        if (Math.abs(m.vx) > 0.8) {
+          m.vx = -m.vx * 0.32;
+          m.squishX = 1.0 - Math.min(0.20, Math.abs(m.vx) * 0.04);
+          m.squishY = 1.0 + Math.min(0.20, Math.abs(m.vx) * 0.04);
+        } else {
+          m.vx = 0;
+        }
       }
       m.angularVelocity *= 0.8;
     }
 
-    // Straight right vertical wall - stops creature precisely at outer edge with zero poking
+    // Straight right vertical wall - soft spring bounce off wall
     if (m.x + rRight > right) {
       m.x = right - rRight;
       if (m.vx > 0) {
-        m.vx = 0; // stop horizontal motion instantly against wall
+        if (m.vx > 0.8) {
+          m.vx = -m.vx * 0.32;
+          m.squishX = 1.0 - Math.min(0.20, m.vx * 0.04);
+          m.squishY = 1.0 + Math.min(0.20, m.vx * 0.04);
+        } else {
+          m.vx = 0;
+        }
       }
       m.angularVelocity *= 0.8;
     }

@@ -1,11 +1,11 @@
 :root {
-  --bg-deep: #FEF3C7;
-  --bg-cream: #FFFBEB;
-  --bg-peach: #FDE68A;
+  --bg-deep: #FDF2F8;
+  --bg-cream: #FFF5F7;
+  --bg-peach: #FCE7F3;
   --bg-surface: rgba(255, 255, 255, 0.96);
-  --bg-glass: rgba(255, 251, 235, 0.94);
-  --border-glass: rgba(244, 63, 94, 0.35);
-  --border-light: rgba(251, 191, 36, 0.45);
+  --bg-glass: rgba(255, 255, 255, 0.94);
+  --border-glass: rgba(244, 63, 94, 0.28);
+  --border-light: rgba(244, 114, 182, 0.35);
 
   --color-header-pill: #E11D48;
   --color-header-border: #F43F5E;
@@ -31,8 +31,8 @@
   --font-display: 'Fredoka', cursive, sans-serif;
   --font-body: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
 
-  --shadow-lg: 0 16px 36px rgba(136, 19, 55, 0.14);
-  --shadow-glow: 0 0 20px rgba(244, 63, 94, 0.32);
+  --shadow-lg: 0 16px 36px rgba(136, 19, 55, 0.12);
+  --shadow-glow: 0 0 20px rgba(244, 63, 94, 0.28);
 }
 
 * {
@@ -51,7 +51,7 @@ body {
   overflow: hidden;
   overscroll-behavior: none;
   touch-action: none;
-  background-color: var(--bg-deep);
+  background-color: #FDF2F8;
   font-family: var(--font-body);
   color: var(--text-main);
   display: flex;
@@ -59,53 +59,20 @@ body {
   justify-content: center;
 }
 
-/* Ambient Cozy Plushie Toybox Backdrop */
+/* Plain Sweet Pastel Pink Backdrop */
 .forest-backdrop {
   position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: 0;
   overflow: hidden;
-  background: linear-gradient(180deg, #FFFBEB 0%, #FEF3C7 50%, #FDE68A 100%);
-  background-image: radial-gradient(circle at 50% 20%, rgba(255, 255, 255, 0.8) 0%, transparent 65%),
-                    linear-gradient(180deg, #FFFBEB 0%, #FEE2E2 55%, #FED7AA 100%);
+  background-color: #FDF2F8;
+  background: #FDF2F8;
 }
 
-.light-ray {
-  position: absolute;
-  top: -100px;
-  width: 280px;
-  height: 1200px;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.45) 0%, rgba(254, 226, 226, 0.2) 60%, transparent 100%);
-  transform: rotate(25deg);
-  filter: blur(35px);
-}
-
-.ray-1 { left: 10%; animation: rayDrift 18s ease-in-out infinite alternate; }
-.ray-2 { right: 12%; animation: rayDrift 24s ease-in-out infinite alternate-reverse; }
-
-@keyframes rayDrift {
-  0% { transform: rotate(22deg) translateX(0); opacity: 0.6; }
-  100% { transform: rotate(27deg) translateX(30px); opacity: 0.95; }
-}
-
+.light-ray,
 .floating-firefly {
-  position: absolute;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.9) 0%, rgba(186, 230, 253, 0.6) 60%, rgba(56, 189, 248, 0.3) 100%);
-  box-shadow: 0 0 8px rgba(56, 189, 248, 0.6), inset 0 0 4px #FFFFFF;
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  animation: bubbleFloat 10s ease-in-out infinite alternate;
-}
-
-.firefly-1 { width: 8px; height: 8px; top: 35%; left: 18%; animation-duration: 9s; }
-.firefly-2 { width: 12px; height: 12px; top: 65%; right: 20%; animation-duration: 13s; }
-.firefly-3 { width: 6px; height: 6px; top: 20%; right: 35%; animation-duration: 11s; }
-
-@keyframes bubbleFloat {
-  0% { transform: translate(0, 0) scale(0.9); opacity: 0.5; }
-  50% { opacity: 0.95; transform: translate(15px, -25px) scale(1.1); }
-  100% { transform: translate(-10px, -55px) scale(1.2); opacity: 0.4; }
+  display: none !important;
 }
 
 /* App Main Container & Dashboard */

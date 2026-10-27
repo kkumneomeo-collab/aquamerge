@@ -1,7 +1,7 @@
-import { MUSHROOM_TIERS, BOMB_ITEM, getRandomDropTier } from './mushroom-data.js?v=20261027_plushies';
+import { MUSHROOM_TIERS, BOMB_ITEM, getRandomDropTier } from './mushroom-data.js?v=20261027_claw_v2';
 import { sound } from './audio.js';
-import { PhysicsWorld, getCreatureRadiusAtAngle } from './physics.js?v=20261027_plushies';
-import { TerrariumRenderer } from './renderer.js?v=20261027_plushies';
+import { PhysicsWorld, getCreatureRadiusAtAngle } from './physics.js?v=20261027_claw_v2';
+import { TerrariumRenderer } from './renderer.js?v=20261027_claw_v2';
 
 export class GameManager {
   constructor() {
@@ -187,8 +187,9 @@ export class GameManager {
     // Check if dropping a Timed Spark Bomb (3s countdown)
     if (this.currentTierData.isBomb || this.currentTierData.id === 'plush_bomb' || this.currentTierData.tier === 99) {
       this.clampDropX();
-      this.world.addBomb(this.dropX, 90 + BOMB_ITEM.radius, BOMB_ITEM);
-      this.renderer.addPopup(this.dropX, 90 + BOMB_ITEM.radius, '💣 3s Fuse Lit!');
+      this.renderer.triggerClawDrop();
+      this.world.addBomb(this.dropX, 76, BOMB_ITEM);
+      this.renderer.addPopup(this.dropX, 76, '💣 3s Fuse Lit!');
 
       this.canDrop = false;
       this.dropCooldownTimer = this.dropCooldownDuration;
@@ -203,11 +204,10 @@ export class GameManager {
       return;
     }
 
-    // Spawn normal plushie into the physics world
-    const dummy = { radius: this.currentTierData.radius, tierData: this.currentTierData, angle: 0 };
-    const ry = getCreatureRadiusAtAngle(dummy, Math.PI * 0.5);
+    // Spawn normal plushie into the physics world from the claw grasp
     this.clampDropX();
-    this.world.addMushroom(this.dropX, 90 + ry, this.currentTierData, true);
+    this.renderer.triggerClawDrop();
+    this.world.addMushroom(this.dropX, 76, this.currentTierData, true);
 
     this.canDrop = false;
     this.dropCooldownTimer = this.dropCooldownDuration;
