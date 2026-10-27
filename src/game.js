@@ -1,7 +1,7 @@
-import { MUSHROOM_TIERS, BOMB_ITEM, getRandomDropTier } from './mushroom-data.js?v=20261027_claw_v2';
+import { MUSHROOM_TIERS, BOMB_ITEM, getRandomDropTier } from './mushroom-data.js?v=20261027_noblink_v4';
 import { sound } from './audio.js';
-import { PhysicsWorld, getCreatureRadiusAtAngle } from './physics.js?v=20261027_claw_v2';
-import { TerrariumRenderer } from './renderer.js?v=20261027_claw_v2';
+import { PhysicsWorld, getCreatureRadiusAtAngle } from './physics.js?v=20261027_noblink_v4';
+import { TerrariumRenderer } from './renderer.js?v=20261027_noblink_v4';
 
 export class GameManager {
   constructor() {
@@ -46,10 +46,6 @@ export class GameManager {
     this.dangerMaxTime = 3.5;
     this.isDangerActive = false;
     this.dangerSoundTimer = 0;
-
-    // Dropper blinking animation state
-    this.heldBlinkTimer = Math.random() * 3 + 2;
-    this.heldIsBlinking = false;
 
     // Settings
     this.settings = {
@@ -188,8 +184,9 @@ export class GameManager {
     if (this.currentTierData.isBomb || this.currentTierData.id === 'plush_bomb' || this.currentTierData.tier === 99) {
       this.clampDropX();
       this.renderer.triggerClawDrop();
-      this.world.addBomb(this.dropX, 76, BOMB_ITEM);
-      this.renderer.addPopup(this.dropX, 76, '💣 3s Fuse Lit!');
+      const dropY = this.renderer.getClawPlushieCenterY(BOMB_ITEM.radius);
+      this.world.addBomb(this.dropX, dropY, BOMB_ITEM);
+      this.renderer.addPopup(this.dropX, dropY, '💣 3s Fuse Lit!');
 
       this.canDrop = false;
       this.dropCooldownTimer = this.dropCooldownDuration;
@@ -207,7 +204,8 @@ export class GameManager {
     // Spawn normal plushie into the physics world from the claw grasp
     this.clampDropX();
     this.renderer.triggerClawDrop();
-    this.world.addMushroom(this.dropX, 76, this.currentTierData, true);
+    const dropY = this.renderer.getClawPlushieCenterY(this.currentTierData.radius);
+    this.world.addMushroom(this.dropX, dropY, this.currentTierData, true);
 
     this.canDrop = false;
     this.dropCooldownTimer = this.dropCooldownDuration;
@@ -1107,18 +1105,6 @@ export class GameManager {
 
       this.pollGamepad(dt);
 
-      // Dropper creature eye blinking
-      this.heldBlinkTimer -= dt;
-      if (this.heldBlinkTimer <= 0) {
-        if (!this.heldIsBlinking) {
-          this.heldIsBlinking = true;
-          this.heldBlinkTimer = 0.14;
-        } else {
-          this.heldIsBlinking = false;
-          this.heldBlinkTimer = Math.random() * 4 + 2.5;
-        }
-      }
-
       // Reload cooldown
       if (!this.canDrop) {
         this.dropCooldownTimer -= dt;
@@ -1187,7 +1173,7 @@ export class GameManager {
     // Render frame
     this.renderer.render({
       world: this.world,
-      heldMushroom: this.state === 'PLAYING' && this.currentTierData ? { ...this.currentTierData, isBlinking: this.heldIsBlinking } : null,
+      heldMushroom: this.state === 'PLAYING' && this.currentTierData ? { ...this.currentTierData } : null,
       dropX: this.dropX,
       aimAssisted: this.settings.aimGuide !== false,
       dangerLineY: this.dangerLineY,

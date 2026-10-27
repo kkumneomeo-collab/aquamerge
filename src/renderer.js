@@ -1,4 +1,4 @@
-import { MUSHROOM_TIERS, BOMB_ITEM } from './mushroom-data.js?v=20261027_claw_v2';
+import { MUSHROOM_TIERS, BOMB_ITEM } from './mushroom-data.js?v=20261027_noblink_v4';
 
 /**
  * Canvas Renderer for Cozy Plushie Toybox Merge Puzzle
@@ -17,19 +17,13 @@ export class TerrariumRenderer {
     this.shakeIntensity = 0;
     this.clawOpenTimer = 0; // Arcade claw machine opening recoil timer
 
-    // Preload plushie character sprites (both open eyes and cute blinking eyes)
+    // Preload plushie character sprites
     this.animalImages = {};
-    this.blinkImages = {};
     for (const tierData of MUSHROOM_TIERS) {
       if (tierData.imageSrc) {
         const img = new Image();
         img.src = tierData.imageSrc;
         this.animalImages[tierData.tier] = img;
-      }
-      if (tierData.blinkSrc) {
-        const bImg = new Image();
-        bImg.src = tierData.blinkSrc;
-        this.blinkImages[tierData.tier] = bImg;
       }
     }
 
@@ -40,6 +34,11 @@ export class TerrariumRenderer {
     this.animalImages['plush_bomb'] = this.bombImage;
 
     this.initAmbientSpores();
+  }
+
+  getClawPlushieCenterY(radius) {
+    const hubY = 34;
+    return hubY + 12 + (radius || 25);
   }
 
   initAmbientSpores() {
@@ -501,7 +500,7 @@ export class TerrariumRenderer {
     const dotRadius = 3.5;
     const dotColor = '#F43F5E';
 
-    const startBeamY = 76 + heldMushroom.radius + 6;
+    const startBeamY = this.getClawPlushieCenterY(heldMushroom.radius) + heldMushroom.radius + 6;
     ctx.fillStyle = dotColor;
     for (let y = startBeamY; y < landingY - 6; y += dotSpacing) {
       ctx.beginPath();
@@ -803,9 +802,9 @@ export class TerrariumRenderer {
     ctx.restore();
 
     // 3. Vertical Steel Cable / Telescopic Crane Rod
-    const plushieCenterY = 76;
-    const plushieR = heldMushroom ? heldMushroom.radius : 24;
-    const hubY = plushieCenterY - plushieR - 10;
+    const plushieR = heldMushroom ? heldMushroom.radius : 25;
+    const plushieCenterY = this.getClawPlushieCenterY(plushieR);
+    const hubY = 34;
     const cableTopY = carriageY + carriageH;
 
     // Cable line
@@ -819,14 +818,14 @@ export class TerrariumRenderer {
 
     // Hydraulic joint ring collars
     ctx.fillStyle = '#CBD5E1';
-    for (let cy = cableTopY + 8; cy < hubY - 4; cy += 12) {
+    for (let cy = cableTopY + 4; cy < hubY - 2; cy += 8) {
       ctx.fillRect(dropX - 3.5, cy, 7, 3);
     }
     ctx.restore();
 
     // 4. Rear Claw Prong (depth behind plushie)
     const isOpening = !heldMushroom || !canDrop || (this.clawOpenTimer > 0);
-    const clawSpread = isOpening ? 28 : (plushieR + 5);
+    const clawSpread = isOpening ? (plushieR + 24) : (plushieR + 6);
 
     ctx.save();
     ctx.translate(dropX, hubY + 12);
@@ -835,7 +834,7 @@ export class TerrariumRenderer {
     ctx.lineCap = 'round';
     ctx.beginPath();
     ctx.moveTo(0, 0);
-    ctx.lineTo(0, plushieR * 0.9);
+    ctx.lineTo(0, plushieR * 0.95);
     ctx.stroke();
     ctx.restore();
 
@@ -853,7 +852,6 @@ export class TerrariumRenderer {
         squishX: 1.0,
         squishY: 1.0,
         angle: 0,
-        isBlinking: heldMushroom.isBlinking || false,
         lookX: 0,
         lookY: 0.2,
         wobble: 0,
@@ -910,32 +908,37 @@ export class TerrariumRenderer {
 
     if (isOpening) {
       // Open Claw Pose
+      const openOut = clawSpread * 0.85;
+      const openDown = plushieR * 0.6 + 10;
+      const tipOut = clawSpread * 1.1;
+      const tipDown = plushieR * 0.9 + 15;
+
       ctx.strokeStyle = prongBorder;
       ctx.beginPath();
       ctx.moveTo(0, 0);
-      ctx.lineTo(-24, 18);
-      ctx.lineTo(-32, 38);
+      ctx.lineTo(-openOut, openDown);
+      ctx.lineTo(-tipOut, tipDown);
       ctx.stroke();
 
       ctx.strokeStyle = prongColor;
       ctx.lineWidth = 2.5;
       ctx.beginPath();
       ctx.moveTo(0, 0);
-      ctx.lineTo(-24, 18);
-      ctx.lineTo(-32, 38);
+      ctx.lineTo(-openOut, openDown);
+      ctx.lineTo(-tipOut, tipDown);
       ctx.stroke();
 
       // Rubber grip pad
       ctx.fillStyle = padColor;
       ctx.beginPath();
-      ctx.arc(-32, 38, 4, 0, Math.PI * 2);
+      ctx.arc(-tipOut, tipDown, 4.5, 0, Math.PI * 2);
       ctx.fill();
     } else {
       // Grasping Claw Pose (hugging plushie sides snugly!)
       const armOut = clawSpread * 0.95;
-      const armDown = plushieR * 0.55 + 10;
-      const tipIn = clawSpread * 0.78;
-      const tipDown = plushieR * 1.15 + 10;
+      const armDown = plushieR * 0.6 + 8;
+      const tipIn = clawSpread * 0.76;
+      const tipDown = plushieR * 1.18 + 8;
 
       // Dark outline
       ctx.strokeStyle = prongBorder;
@@ -970,35 +973,36 @@ export class TerrariumRenderer {
     ctx.lineJoin = 'round';
 
     if (isOpening) {
-      // Open Claw Pose
+      const openOut = clawSpread * 0.85;
+      const openDown = plushieR * 0.6 + 10;
+      const tipOut = clawSpread * 1.1;
+      const tipDown = plushieR * 0.9 + 15;
+
       ctx.strokeStyle = prongBorder;
       ctx.beginPath();
       ctx.moveTo(0, 0);
-      ctx.lineTo(24, 18);
-      ctx.lineTo(32, 38);
+      ctx.lineTo(openOut, openDown);
+      ctx.lineTo(tipOut, tipDown);
       ctx.stroke();
 
       ctx.strokeStyle = prongColor;
       ctx.lineWidth = 2.5;
       ctx.beginPath();
       ctx.moveTo(0, 0);
-      ctx.lineTo(24, 18);
-      ctx.lineTo(32, 38);
+      ctx.lineTo(openOut, openDown);
+      ctx.lineTo(tipOut, tipDown);
       ctx.stroke();
 
-      // Rubber grip pad
       ctx.fillStyle = padColor;
       ctx.beginPath();
-      ctx.arc(32, 38, 4, 0, Math.PI * 2);
+      ctx.arc(tipOut, tipDown, 4.5, 0, Math.PI * 2);
       ctx.fill();
     } else {
-      // Grasping Claw Pose (hugging plushie sides snugly!)
       const armOut = clawSpread * 0.95;
-      const armDown = plushieR * 0.55 + 10;
-      const tipIn = clawSpread * 0.78;
-      const tipDown = plushieR * 1.15 + 10;
+      const armDown = plushieR * 0.6 + 8;
+      const tipIn = clawSpread * 0.76;
+      const tipDown = plushieR * 1.18 + 8;
 
-      // Dark outline
       ctx.strokeStyle = prongBorder;
       ctx.beginPath();
       ctx.moveTo(0, 0);
@@ -1006,7 +1010,6 @@ export class TerrariumRenderer {
       ctx.lineTo(tipIn, tipDown);
       ctx.stroke();
 
-      // Chrome highlight
       ctx.strokeStyle = prongColor;
       ctx.lineWidth = 2.5;
       ctx.beginPath();
@@ -1015,7 +1018,6 @@ export class TerrariumRenderer {
       ctx.lineTo(tipIn, tipDown);
       ctx.stroke();
 
-      // Rubber grip pad tip touching plushie
       ctx.fillStyle = padColor;
       ctx.beginPath();
       ctx.arc(tipIn, tipDown, 4.5, 0, Math.PI * 2);
@@ -1137,9 +1139,7 @@ export class TerrariumRenderer {
       return;
     }
     let img = null;
-    if (m.isBlinking && this.blinkImages && this.blinkImages[data.tier] && this.blinkImages[data.tier].complete && this.blinkImages[data.tier].naturalWidth > 0) {
-      img = this.blinkImages[data.tier];
-    } else if (this.animalImages && this.animalImages[data.tier] && this.animalImages[data.tier].complete && this.animalImages[data.tier].naturalWidth > 0) {
+    if (this.animalImages && this.animalImages[data.tier] && this.animalImages[data.tier].complete && this.animalImages[data.tier].naturalWidth > 0) {
       img = this.animalImages[data.tier];
     }
 
@@ -1499,15 +1499,7 @@ export class TerrariumRenderer {
     }
 
     // Eyes
-    if (m.isBlinking) {
-      // Closed happy blink arcs
-      ctx.strokeStyle = '#231815';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(-eyeSpacing, eyeY, eyeRadius * 0.9, 0.2, Math.PI - 0.2);
-      ctx.arc(eyeSpacing, eyeY, eyeRadius * 0.9, 0.2, Math.PI - 0.2);
-      ctx.stroke();
-    } else if (isWorried) {
+    if (isWorried) {
       // Worried wide eyes with little sweat bead
       ctx.fillStyle = '#FFFFFF';
       ctx.beginPath();

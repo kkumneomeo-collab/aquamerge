@@ -69,8 +69,6 @@ export class PhysicsWorld {
       hasDetonated: false,
       fuseSoundTimer: 0.1,
       // Living animation state
-      blinkTimer: Math.random() * 3 + 2,
-      isBlinking: false,
       lookX: 0,
       lookY: 0,
       wobble: 0,
@@ -462,18 +460,6 @@ export class PhysicsWorld {
         m.sleepTimer = 0;
         m.isSleeping = false;
         m.settledTime = Math.max(0, m.settledTime - dt * 2);
-      }
-
-      // Blinking animation
-      m.blinkTimer -= dt;
-      if (m.blinkTimer <= 0) {
-        if (!m.isBlinking) {
-          m.isBlinking = true;
-          m.blinkTimer = 0.12;
-        } else {
-          m.isBlinking = false;
-          m.blinkTimer = Math.random() * 4 + 2.5;
-        }
       }
 
       // No wobbling
